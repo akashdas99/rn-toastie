@@ -26,7 +26,7 @@ export default function App() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         <YourApp />
-        <Toaster position="top" maxVisible={3} />
+        <Toaster position="top" />
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
@@ -68,24 +68,64 @@ Also accepts a function (`() => api.pay(order)`). Returns the original promise.
 const id = toast.loading('Uploading...');
 toast.update(id, { title: 'Uploaded', type: 'success', duration: 4000 });
 ```
+`update` accepts `title`, `description`, `type`, `duration`, `action`, `icon` and `render`,
+and restarts the countdown.
 
-## Options
+## API
 
-| Option | Description |
+| Method | Description |
 | --- | --- |
-| `description` | Second line of text |
-| `duration` | ms until auto-dismiss (`Infinity` = never) |
-| `action` | `{ label, onPress }` button |
-| `icon` | Custom `ReactNode` replacing the built-in icon |
-| `onOpen` | Called once when the toast appears |
-| `onDismiss` | Called after the toast leaves the screen |
-| `toasterId` | Which `<Toaster id>` shows it |
-| `unstyled` | Custom toasts: remove the default card chrome |
-| `expandOnTap` | Tap toggles the deck (default true, false for custom) |
-| `closeButton` | Show the close (x) button; overrides the Toaster's `closeButton` |
-| `animation` | Per-toast animation override (see [Animation](#animation)) |
-| `accessibilityLabel` | Screen-reader text (recommended for custom) |
-| `id` | Reuse an id to replace an existing toast |
+| `toast(content, options?)` | Show a toast. `content` is a string or a custom component. Returns the id |
+| `toast.success / error / info (content, options?)` | Same, with that type |
+| `toast.loading(content, options?)` | Spinner icon, stays until updated or dismissed |
+| `toast.custom(render, options?)` | Custom component (see [Custom components](#custom-components)) |
+| `toast.promise(promise, messages, options?)` | Loading, then success or error. Returns the promise |
+| `toast.update(id, patch)` | Change a toast that is on screen |
+| `toast.dismiss(id?)` | Dismiss one toast, or all when no id is given |
+| `toast.clear(toasterId?)` | Dismiss every toast in one toaster, or in all toasters |
+
+Each toast runs its own timer, so the oldest leaves first.
+
+## Toaster props
+
+| Prop | Default | Description |
+| --- | --- | --- |
+| `id` | `'default'` | Name of this toaster. Target it with `toast('..', { toasterId })` |
+| `position` | `'top'` | One of the eight [positions](#positions) |
+| `maxWidth` | `380` | Max toast width (px) for the left, center and right positions |
+| `stacked` | `true` | Collapsed deck that expands on tap. `false` = [list mode](#list-mode-no-stacking) |
+| `maxVisible` | `3` stacked, unlimited in list mode | How many toasts show at once |
+| `newestOnTop` | `false` | Put the newest toast above the older ones (see [Stack order](#stack-order)) |
+| `peek` | `12` | Vertical peek (px) of each card behind the front one |
+| `peekScale` | `0.05` | Scale reduction per level in the collapsed deck |
+| `gap` | `8` | Gap (px) between toasts when expanded or in list mode |
+| `closeButton` | `true` | Close (x) button on built-in toasts |
+| `showProgress` | `true` | Countdown bar on auto-dismissing toasts |
+| `theme` | `'system'` | `'light'`, `'dark'` or `'system'` |
+| `themeOverrides` | | Override any [theme](#theming) value |
+| `animation` | | Enter, exit, restack and swipe motion (see [Animation](#animation)) |
+| `haptics` | | `(event) => void`, see [Haptics](#haptics) |
+| `rtl` | `I18nManager.isRTL` | Mirror the layout and progress bar |
+| `avoidKeyboard` | `true` on iOS, `false` on Android | Lift a bottom toaster above the keyboard |
+
+## Toast options
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `description` | | Second line of text |
+| `type` | `'default'` | `'default'`, `'success'`, `'error'`, `'info'` or `'loading'` |
+| `duration` | `4000` (`Infinity` for loading) | ms until auto-dismiss. `Infinity` = never |
+| `action` | | `{ label, onPress }` button. Pressing it runs `onPress`, then dismisses |
+| `icon` | | Custom `ReactNode` replacing the built-in icon (and the loading spinner) |
+| `closeButton` | Toaster's `closeButton` | Show the close (x) button. Never shown on custom toasts |
+| `onOpen` | | Called once when the toast appears |
+| `onDismiss` | | Called once after the toast leaves the screen, for any reason |
+| `toasterId` | `'default'` | Which `<Toaster id>` shows it |
+| `animation` | Toaster's `animation` | Per-toast override (see [Animation](#animation)) |
+| `unstyled` | `false` | Custom toasts: remove the card background, border, padding and shadow |
+| `expandOnTap` | `true`, `false` for custom | Tap toggles the deck |
+| `accessibilityLabel` | title and description | Screen-reader text. Recommended for custom toasts |
+| `id` | auto | Reuse an id to replace an existing toast |
 
 ## Custom components
 Pass any React element, or a function that returns one, instead of a string:
@@ -185,6 +225,16 @@ inside the Modal and target it with `toasterId: 'modal'`.
   themeOverrides={{ background: '#0B1220', colors: { success: '#10B981' } }}
 />
 ```
+| Key | Used for |
+| --- | --- |
+| `background` | Card background |
+| `border` | Card border |
+| `title` | Title text (and the loading spinner) |
+| `description` | Description text and the close (x) icon |
+| `actionBackground` | Action and close button background |
+| `actionText` | Action button text |
+| `colors` | Per-type color for the icon and progress bar: `default`, `success`, `error`, `info`, `loading` |
+
 `darkTheme` and `lightTheme` are exported if you want to extend them.
 
 ## Animation
@@ -204,6 +254,7 @@ toast.error('Card declined', { animation: { preset: 'fade', exitDuration: 150 } 
 
 | Option | Default | Description |
 | --- | --- | --- |
+| `preset` | `'slide'` | Enter/exit motion, see the table above |
 | `type` | `'spring'` | `'spring'` or `'timing'` for enter and restack motion |
 | `spring` | `{ damping: 18, stiffness: 180, mass: 0.8 }` | Spring config |
 | `enterDuration` | `300` | Enter/restack ms when `type` is `'timing'` |
@@ -223,8 +274,8 @@ toast.error('Card declined', { animation: { preset: 'fade', exitDuration: 150 } 
 it keeps the same reference between renders.
 
 ## Progress bar
-On by default for auto-dismissing toasts and paused together with the timer while the deck
-is expanded. Turn off with `<Toaster showProgress={false} />`.
+On by default for auto-dismissing toasts. It pauses together with the timer while the deck
+is expanded. Turn it off with `<Toaster showProgress={false} />`.
 
 ## Haptics
 Bring your own library. Events: `show`, `success`, `error`, `dismiss`.
@@ -259,9 +310,3 @@ npm run typecheck
 npm run build      # react-native-builder-bob -> lib/commonjs, lib/module, lib/typescript
 ```
 Run the demo with the Expo app in `example/`.
-
-## Publishing
-```bash
-npm run build && npm pack --dry-run   # check the file list
-npm publish --access public           # add --tag next for pre-releases
-```

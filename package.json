@@ -4,6 +4,14 @@
   "description": "Stacked toast notifications for React Native, built on Reanimated",
   "license": "MIT",
   "author": "Akash Das <akash.das.codes@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/akashdas99/rn-toastie.git"
+  },
+  "homepage": "https://github.com/akashdas99/rn-toastie#readme",
+  "bugs": {
+    "url": "https://github.com/akashdas99/rn-toastie/issues"
+  },
   "keywords": [
     "react-native",
     "toast",
