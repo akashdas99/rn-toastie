@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { defaultAnimation, resolveAnimation } from './animation';
 import { getSnapshot, setToasterAnimation, subscribe } from './store';
 import { darkTheme, lightTheme } from './theme';
-import type { ToastTheme, ToastThemeOverrides } from './theme';
+import type { ToastTheme, ToastThemeModeOverrides, ToastThemeOverrides } from './theme';
 import { ToastItem } from './ToastItem';
 import type { HapticEvent, ToastAnimation, ToastPosition } from './types';
 
@@ -24,8 +24,11 @@ export interface ToasterProps {
   rtl?: boolean;
   /** 'system' follows the device color scheme */
   theme?: 'light' | 'dark' | 'system';
-  /** Override any theme color */
-  themeOverrides?: ToastThemeOverrides;
+  /**
+   * Override any theme color. Pass `{ light, dark }` to use different overrides
+   * for each color scheme; a plain object applies to both.
+   */
+  themeOverrides?: ToastThemeOverrides | ToastThemeModeOverrides;
   /** Countdown bar at the bottom of auto-dismissing toasts */
   showProgress?: boolean;
   /** Plug in any haptics library, e.g. expo-haptics (see README) */
@@ -87,10 +90,14 @@ export function Toaster({
   const resolvedTheme: ToastTheme = useMemo(() => {
     const dark = theme === 'dark' || (theme === 'system' && scheme === 'dark');
     const base = dark ? darkTheme : lightTheme;
+    const o: ToastThemeOverrides | undefined =
+      themeOverrides && ('light' in themeOverrides || 'dark' in themeOverrides)
+        ? themeOverrides[dark ? 'dark' : 'light']
+        : (themeOverrides as ToastThemeOverrides | undefined);
     return {
       ...base,
-      ...themeOverrides,
-      colors: { ...base.colors, ...themeOverrides?.colors },
+      ...o,
+      colors: { ...base.colors, ...o?.colors },
     };
   }, [theme, scheme, themeOverrides]);
 

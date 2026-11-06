@@ -1,7 +1,7 @@
 {
   "name": "rn-toastie",
   "version": "0.1.0",
-  "description": "Stacked toast notifications for React Native, built on Reanimated",
+  "description": "Swipeable, stackable toast notifications for React Native and Expo. Promise and custom toasts, 8 positions, themes, configurable animations, built on Reanimated.",
   "license": "MIT",
   "author": "Akash Das <akash.das.codes@gmail.com>",
   "repository": {
@@ -14,10 +14,16 @@
   },
   "keywords": [
     "react-native",
+    "expo",
     "toast",
+    "toaster",
+    "toast-notifications",
+    "snackbar",
+    "notifications",
     "stacked",
+    "swipe",
     "reanimated",
-    "notifications"
+    "gesture-handler"
   ],
   "main": "lib/commonjs/index.js",
   "module": "lib/module/index.js",

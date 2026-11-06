@@ -2,7 +2,7 @@ export { Toaster } from './Toaster';
 export type { ToasterProps } from './Toaster';
 export { toast } from './store';
 export { darkTheme, lightTheme } from './theme';
-export type { ToastTheme, ToastThemeOverrides } from './theme';
+export type { ToastTheme, ToastThemeModeOverrides, ToastThemeOverrides } from './theme';
 export { defaultAnimation } from './animation';
 export type {
   ToastOptions, ToastType, ToastPosition, ToastAction, ToastPatch,

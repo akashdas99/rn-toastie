@@ -1,7 +1,13 @@
 # rn-toastie
 
-Stacked toasts for React Native on Reanimated + Gesture Handler.
-Tap the deck to expand, swipe sideways or toward the screen edge to dismiss.
+Swipeable, stackable toast notifications for React Native and Expo, built on Reanimated and
+Gesture Handler.
+
+- Stacked deck that expands on tap, or a plain list like react-toastify
+- Swipe to dismiss, close button, action button
+- Success, error, info, loading and promise toasts, plus fully custom components
+- 8 positions, light/dark themes, configurable animations
+- Accessible: screen-reader announcements, reduce-motion support, RTL
 
 ## Install
 
@@ -102,7 +108,7 @@ Each toast runs its own timer, so the oldest leaves first.
 | `closeButton` | `true` | Close (x) button on built-in toasts |
 | `showProgress` | `true` | Countdown bar on auto-dismissing toasts |
 | `theme` | `'system'` | `'light'`, `'dark'` or `'system'` |
-| `themeOverrides` | | Override any [theme](#theming) value |
+| `themeOverrides` | | Override any [theme](#theming) value, or `{ light, dark }` for each scheme |
 | `animation` | | Enter, exit, restack and swipe motion (see [Animation](#animation)) |
 | `haptics` | | `(event) => void`, see [Haptics](#haptics) |
 | `rtl` | `I18nManager.isRTL` | Mirror the layout and progress bar |
@@ -219,12 +225,27 @@ toast.clear('bottom');                      // dismiss one toaster only
 inside the Modal and target it with `toasterId: 'modal'`.
 
 ## Theming
+`theme` picks the scheme: `'system'` (default) follows the device, `'light'` and `'dark'` force one.
+`themeOverrides` changes any value; keys you leave out keep the built-in value.
 ```tsx
 <Toaster
   theme="system"   // 'light' | 'dark' | 'system'
-  themeOverrides={{ background: '#0B1220', colors: { success: '#10B981' } }}
+  themeOverrides={{ colors: { success: '#10B981' } }}   // applies to both schemes
 />
 ```
+
+### Different colors for light and dark
+Pass `{ light, dark }` to override each scheme separately. With `theme="system"` the matching one
+is used as the device switches.
+```tsx
+const overrides = {
+  light: { colors: { success: '#059669' } },
+  dark: { background: '#0B1220', border: '#1E293B', colors: { success: '#34D399' } },
+};
+
+<Toaster theme="system" themeOverrides={overrides} />
+```
+Define the object outside render (or `useMemo` it) so it keeps the same reference.
 | Key | Used for |
 | --- | --- |
 | `background` | Card background |
@@ -235,7 +256,18 @@ inside the Modal and target it with `toasterId: 'modal'`.
 | `actionText` | Action button text |
 | `colors` | Per-type color for the icon and progress bar: `default`, `success`, `error`, `info`, `loading` |
 
-`darkTheme` and `lightTheme` are exported if you want to extend them.
+`darkTheme` and `lightTheme` are exported if you want to read the defaults or extend them.
+
+### Custom toasts
+The render function gets the active theme, so your component follows light and dark mode too:
+```tsx
+toast.custom(({ theme }) => (
+  <View style={{ backgroundColor: theme.background }}>
+    <Text style={{ color: theme.title }}>Synced</Text>
+    <Text style={{ color: theme.description }}>All changes saved</Text>
+  </View>
+));
+```
 
 ## Animation
 Set it on the Toaster, and override it for a single toast with the `animation` option.

@@ -15,6 +15,12 @@ export type ToastThemeOverrides = Partial<Omit<ToastTheme, 'colors'>> & {
   colors?: Partial<ToastTheme['colors']>;
 };
 
+/** Separate overrides for each color scheme. */
+export interface ToastThemeModeOverrides {
+  light?: ToastThemeOverrides;
+  dark?: ToastThemeOverrides;
+}
+
 const colors: ToastTheme['colors'] = {
   default: '#71717A',
   success: '#22C55E',
