@@ -1,0 +1,68 @@
+{
+  "name": "rn-toastie",
+  "version": "0.1.0",
+  "description": "Stacked toast notifications for React Native, built on Reanimated",
+  "license": "MIT",
+  "author": "Akash Das <akash.das.codes@gmail.com>",
+  "keywords": [
+    "react-native",
+    "toast",
+    "stacked",
+    "reanimated",
+    "notifications"
+  ],
+  "main": "lib/commonjs/index.js",
+  "module": "lib/module/index.js",
+  "types": "lib/typescript/index.d.ts",
+  "react-native": "src/index.ts",
+  "source": "src/index.ts",
+  "files": [
+    "src",
+    "lib"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "bob build",
+    "clean": "node -e \"require('fs').rmSync('lib',{recursive:true,force:true})\"",
+    "prepare": "bob build"
+  },
+  "peerDependencies": {
+    "react": ">=18",
+    "react-native": ">=0.72",
+    "react-native-gesture-handler": ">=2.14",
+    "react-native-reanimated": ">=3.6",
+    "react-native-safe-area-context": ">=4",
+    "react-native-worklets": ">=0.5"
+  },
+  "peerDependenciesMeta": {
+    "react-native-worklets": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "react": "^19.3.1",
+    "react-native": "^0.88.1",
+    "react-native-builder-bob": "^0.44.1",
+    "react-native-gesture-handler": "~2.32.0",
+    "react-native-reanimated": "^4.7.1",
+    "react-native-safe-area-context": "^5.11.1",
+    "react-native-worklets": "^0.13.1",
+    "typescript": "^5.9.3"
+  },
+  "react-native-builder-bob": {
+    "source": "src",
+    "output": "lib",
+    "targets": [
+      "commonjs",
+      "module",
+      [
+        "typescript",
+        {
+          "project": "tsconfig.build.json"
+        }
+      ]
+    ]
+  }
+}

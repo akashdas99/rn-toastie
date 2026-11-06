@@ -1,0 +1,15 @@
+{
+  "expo": {
+    "name": "rn-toastie",
+    "slug": "rn-toastie",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "predictiveBackGestureEnabled": false
+    }
+  }
+}
