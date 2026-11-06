@@ -1,7 +1,19 @@
 # rn-toastie
 
+[![npm version](https://img.shields.io/npm/v/rn-toastie.svg)](https://www.npmjs.com/package/rn-toastie)
+[![npm downloads](https://img.shields.io/npm/dm/rn-toastie.svg)](https://www.npmjs.com/package/rn-toastie)
+[![bundle size](https://img.shields.io/bundlephobia/minzip/rn-toastie)](https://bundlephobia.com/package/rn-toastie)
+[![license](https://img.shields.io/npm/l/rn-toastie.svg)](https://github.com/akashdas99/rn-toastie/blob/main/LICENSE)
+[![TypeScript](https://img.shields.io/badge/types-TypeScript-blue.svg)](https://www.typescriptlang.org/)
+[![platforms](https://img.shields.io/badge/platforms-iOS%20%7C%20Android-lightgrey.svg)](https://reactnative.dev/)
+[![Expo](https://img.shields.io/badge/Expo-compatible-000020.svg?logo=expo)](https://expo.dev/)
+[![GitHub stars](https://img.shields.io/github/stars/akashdas99/rn-toastie?style=social)](https://github.com/akashdas99/rn-toastie)
+[![Try it on Snack](https://img.shields.io/badge/Try%20it%20on-Snack-4630EB.svg?logo=expo&logoColor=white)](https://snack.expo.dev/@akashdas5/rn-toastie)
+
 Swipeable, stackable toast notifications for React Native and Expo, built on Reanimated and
 Gesture Handler.
+
+**[Live demo on Expo Snack](https://snack.expo.dev/@akashdas5/rn-toastie)**: open it in the browser or scan the QR code with Expo Go.
 
 - Stacked deck that expands on tap, or a plain list like react-toastify
 - Swipe to dismiss, close button, action button
