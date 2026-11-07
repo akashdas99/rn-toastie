@@ -3,21 +3,31 @@ import { I18nManager, Keyboard, Platform, StyleSheet, useColorScheme } from 'rea
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { defaultAnimation, resolveAnimation } from './animation';
+import { anchorOffset, defaultPeekSide, resolveOffset, stackLayer, stackOffsets } from './layout';
 import { getSnapshot, setToasterAnimation, subscribe } from './store';
 import { darkTheme, lightTheme } from './theme';
 import type { ToastTheme, ToastThemeModeOverrides, ToastThemeOverrides } from './theme';
 import { ToastItem } from './ToastItem';
-import type { HapticEvent, ToastAnimation, ToastPosition } from './types';
+import type {
+  HapticEvent, ToastAnimation, ToastOffset, ToastPeekSide, ToastPosition,
+} from './types';
 
 export interface ToasterProps {
   /** Name of this toaster. Target it with toast('..', { toasterId }). */
   id?: string;
   position?: ToastPosition;
   /**
+   * Distance (px) from the screen edges, inside the safe area. A number sets all
+   * sides; an object sets individual ones. Default { top: 8, bottom: 8, left: 16, right: 16 }.
+   */
+  offset?: ToastOffset;
+  /**
    * Lift a bottom toaster above the keyboard. Default: true on iOS only,
    * because Android with adjustResize already moves the window.
    */
   avoidKeyboard?: boolean;
+  /** Extra gap (px) above the keyboard when avoidKeyboard lifts a bottom toaster. Default 0. */
+  keyboardOffset?: number;
   /** Max toast width (px) for the left/center/right positions. Default 380. */
   maxWidth?: number;
   /** Mirror the toast layout and progress bar. Defaults to I18nManager.isRTL. */
@@ -45,6 +55,12 @@ export interface ToasterProps {
   stacked?: boolean;
   /** Vertical peek of each toast behind the front one (px) */
   peek?: number;
+  /**
+   * Collapsed deck only: whether cards behind the front toast sit lower (`bottom`)
+   * or higher (`top`) on the screen. Default: `bottom` for top toasters, `top` for
+   * bottom toasters. Does not change list order (`newestOnTop`).
+   */
+  peekSide?: ToastPeekSide;
   /** Gap between toasts when expanded (px) */
   gap?: number;
   /** Scale reduction per level in the collapsed deck */
@@ -63,9 +79,11 @@ export interface ToasterProps {
 export function Toaster({
   id = 'default',
   position = 'top',
+  offset,
   maxWidth = 380,
   rtl = I18nManager.isRTL,
   avoidKeyboard = Platform.OS === 'ios',
+  keyboardOffset = 0,
   theme = 'system',
   themeOverrides,
   showProgress = true,
@@ -73,6 +91,7 @@ export function Toaster({
   maxVisible,
   stacked = true,
   peek = 12,
+  peekSide,
   gap = 8,
   peekScale = 0.05,
   animation,
@@ -128,12 +147,12 @@ export function Toaster({
     };
   }, [avoidKeyboard, position, kb]);
 
-  const bottomInset = insets.bottom;
-  const topInset = insets.top;
+  const edge = resolveOffset(offset);
+  const left = insets.left + edge.left;
+  const right = insets.right + edge.right;
+
   const containerStyle = useAnimatedStyle(() =>
-    position.startsWith('top')
-      ? { top: topInset + 8 }
-      : { bottom: Math.max(kb.value, bottomInset) + 8 },
+    anchorOffset(position, insets, kb.value, edge, keyboardOffset),
   );
 
   const active = useMemo(() => toasts.filter((t) => !t.dismissed), [toasts]);
@@ -154,34 +173,33 @@ export function Toaster({
   const spread = !stacked || expanded;
   const shown = stacked && expanded ? Infinity : limit;
 
-  const offsets = useMemo(() => {
-    // Offsets grow away from the toaster's edge. Either the newest toast sits on
-    // the edge and older ones stack away from it, or older ones keep their place
-    // on the edge and each new toast lands beyond them.
-    const newestAtEdge = position.startsWith('top') ? newestOnTop : !newestOnTop;
-    if (newestAtEdge) {
-      let acc = 0;
-      return active.map((t, i) => {
-        const off = spread ? acc : i * peek;
-        acc += (heights[t.id] ?? 60) + gap;
-        return off;
-      });
-    }
+  const resolvedPeekSide = peekSide ?? defaultPeekSide(position);
 
-    // Only toasts that are shown take up room.
-    const depth = Math.min(active.length, shown);
-    if (!spread) {
-      return active.map((_, i) => (i >= depth ? 0 : (depth - 1 - i) * peek));
-    }
+  const offsets = useMemo(
+    () =>
+      stackOffsets({
+        items: active,
+        heights,
+        position,
+        newestOnTop,
+        spread,
+        shown,
+        peek,
+        gap,
+      }),
+    [active, spread, shown, heights, peek, gap, position, newestOnTop],
+  );
 
-    const offs = new Array<number>(active.length).fill(0);
-    let acc = 0;
-    for (let i = depth - 1; i >= 0; i--) {
-      offs[i] = acc;
-      acc += (heights[active[i].id] ?? 60) + gap;
-    }
-    return offs;
-  }, [active, spread, shown, heights, peek, gap, position, newestOnTop]);
+  const layers = useMemo(
+    () =>
+      stackLayer({
+        items: active,
+        position,
+        newestOnTop,
+        shown: spread ? active.length : shown,
+      }),
+    [active, spread, shown, position, newestOnTop],
+  );
 
   if (toasts.length === 0) return null;
 
@@ -195,7 +213,9 @@ export function Toaster({
             key={t.id}
             toast={t}
             index={index === -1 ? 0 : index}
+            layer={index === -1 ? 0 : layers[index]}
             offset={index === -1 ? 0 : offsets[index]}
+            peekSide={resolvedPeekSide}
             position={position}
             expanded={spread}
             hidden={hidden}
@@ -205,6 +225,8 @@ export function Toaster({
             showProgress={showProgress}
             rtl={rtl}
             maxWidth={maxWidth}
+            left={left}
+            right={right}
             animation={anim}
             closeButton={t.closeButton ?? closeButton}
             haptics={haptics}

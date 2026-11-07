@@ -1,12 +1,23 @@
 import { useCallback, useMemo, useState } from 'react';
 import {
-  Platform, Pressable, ScrollView, StyleSheet, Text, View, useColorScheme,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+  useColorScheme,
 } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Toaster, toast } from 'rn-toastie';
-import type { ToastAnimationPreset, ToastPosition } from 'rn-toastie';
+import type { ToastAnimationPreset, ToastPeekSide, ToastPosition } from 'rn-toastie';
+
+type PeekSideChoice = ToastPeekSide | 'default';
+const PEEK_SIDES: PeekSideChoice[] = ['default', 'top', 'bottom'];
 
 const TOP_POSITIONS: ToastPosition[] = ['top', 'top-left', 'top-center', 'top-right'];
 const BOTTOM_POSITIONS: ToastPosition[] = ['bottom', 'bottom-left', 'bottom-center', 'bottom-right'];
@@ -31,6 +42,8 @@ function AppBody() {
   const [position, setPosition] = useState<ToastPosition>('top');
   const [newestOnTop, setNewestOnTop] = useState(false);
   const [stacked, setStacked] = useState(true);
+  const [peekSide, setPeekSide] = useState<PeekSideChoice>('default');
+  const [keyboardNote, setKeyboardNote] = useState('');
 
   const palette: Palette = useMemo(
     () =>
@@ -127,7 +140,7 @@ function AppBody() {
                     style={[styles.feedbackBtn, { backgroundColor: theme.actionBackground }]}
                     onPress={() => {
                       dismiss();
-                      toast.info("Thanks—we'll use that to improve the example");
+                      toast.info("Thanks, we'll use that to improve the example");
                     }}
                   >
                     <Text style={{ color: theme.actionText, fontWeight: '600' }}>No</Text>
@@ -166,10 +179,22 @@ function AppBody() {
       styles.screen,
       {
         paddingTop: Math.max(insets.top, 16) + 8,
-        paddingBottom: Math.max(insets.bottom, 24),
+        paddingBottom: 16,
       },
     ],
     [insets.bottom, insets.top],
+  );
+
+  const keyboardFooterStyle = useMemo(
+    () => [
+      styles.keyboardFooter,
+      {
+        borderTopColor: palette.cardBorder,
+        backgroundColor: palette.bg,
+        paddingBottom: Math.max(insets.bottom, 12),
+      },
+    ],
+    [insets.bottom, palette.bg, palette.cardBorder],
   );
 
   const cardStyle = useMemo(
@@ -196,7 +221,7 @@ function AppBody() {
     (p: ToastPosition) => (
       <Pressable
         key={p}
-        android_ripple={{ color: 'rgba(0,0,0,0.12)', borderless: false }}
+        android_ripple={{ color: 'rgba(0,0,0,0.12)', borderless: false, foreground: true }}
         onPress={() => {
           setPosition(p);
           toast.info(`Position: ${p}`);
@@ -216,7 +241,7 @@ function AppBody() {
     (p: ToastAnimationPreset) => (
       <Pressable
         key={p}
-        android_ripple={{ color: 'rgba(0,0,0,0.12)', borderless: false }}
+        android_ripple={{ color: 'rgba(0,0,0,0.12)', borderless: false, foreground: true }}
         onPress={() => setPreset(p)}
         style={({ pressed }) => [
           chipStyle(p === preset),
@@ -233,7 +258,7 @@ function AppBody() {
     (label: string, onPress: () => void, key: string) => (
       <Pressable
         key={key}
-        android_ripple={{ color: 'rgba(255,255,255,0.25)', borderless: false }}
+        android_ripple={{ color: 'rgba(255,255,255,0.25)', borderless: false, foreground: true }}
         onPress={onPress}
         style={({ pressed }) => [
           styles.button,
@@ -249,111 +274,196 @@ function AppBody() {
 
   return (
     <>
-      <ScrollView style={{ backgroundColor: palette.bg }} contentContainerStyle={scrollContentStyle}>
-        <Text style={[styles.title, { color: palette.text }]}>rn-toastie</Text>
-        <Text style={[styles.subtitle, { color: palette.text }]}>
-          Try built-in and custom toasts. Change options in Toaster, then tap a demo.
-        </Text>
+      <View style={[styles.root, { backgroundColor: palette.bg }]}>
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={scrollContentStyle}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+        >
+          <Text style={[styles.title, { color: palette.text }]}>rn-toastie</Text>
+          <Text style={[styles.subtitle, { color: palette.text }]}>
+            Try built-in and custom toasts. Change options in Toaster, then tap a demo.
+          </Text>
 
-        <Text style={[styles.sectionHeading, { color: palette.text }]}>Toaster</Text>
-        <View style={cardStyle}>
-          <Text style={[styles.label, { color: palette.text }]}>Position</Text>
-          <Text style={[styles.subLabel, { color: palette.text }]}>Top row</Text>
-          <View style={styles.chips}>{TOP_POSITIONS.map(positionChip)}</View>
-          <Text style={[styles.subLabel, { color: palette.text }]}>Bottom row</Text>
-          <View style={styles.chips}>{BOTTOM_POSITIONS.map(positionChip)}</View>
-
-          <Text style={[styles.label, { color: palette.text }]}>Animation</Text>
-          <View style={styles.chips}>{PRESETS.map(presetChip)}</View>
-
-          <Text style={[styles.label, { color: palette.text }]}>Layout</Text>
-          <View style={styles.chips}>
-            {[true, false].map((v) => (
+          <Text style={[styles.sectionHeading, { color: palette.text }]}>Toaster</Text>
+          <View style={cardStyle}>
+            <Text style={[styles.label, { color: palette.text }]}>Position</Text>
+            <Text style={[styles.subLabel, { color: palette.text }]}>Top row</Text>
+            <View style={styles.chips}>{TOP_POSITIONS.map(positionChip)}</View>
+            <Text style={[styles.subLabel, { color: palette.text }]}>Bottom row</Text>
+            <View style={styles.chips}>{BOTTOM_POSITIONS.map(positionChip)}</View>
+  
+            <Text style={[styles.label, { color: palette.text }]}>Animation</Text>
+            <View style={styles.chips}>{PRESETS.map(presetChip)}</View>
+  
+            <Text style={[styles.label, { color: palette.text }]}>Layout</Text>
+            <View style={styles.chips}>
+              {[true, false].map((v) => (
+                <Pressable
+                  key={String(v)}
+                  android_ripple={{ color: 'rgba(0,0,0,0.12)', borderless: false, foreground: true }}
+                  onPress={() => setStacked(v)}
+                  style={({ pressed }) => [
+                    chipStyle(v === stacked),
+                    pressed && Platform.OS !== 'android' && { opacity: 0.85 },
+                  ]}
+                >
+                  <Text style={{ color: v === stacked ? palette.buttonText : palette.text }}>
+                    {v ? 'stacked' : 'list'}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+  
+            <Text style={[styles.label, { color: palette.text }]}>Stack order</Text>
+            <View style={styles.chips}>
+              {[false, true].map((v) => (
+                <Pressable
+                  key={String(v)}
+                  android_ripple={{ color: 'rgba(0,0,0,0.12)', borderless: false, foreground: true }}
+                  onPress={() => setNewestOnTop(v)}
+                  style={({ pressed }) => [
+                    chipStyle(v === newestOnTop),
+                    pressed && Platform.OS !== 'android' && { opacity: 0.85 },
+                  ]}
+                >
+                  <Text style={{ color: v === newestOnTop ? palette.buttonText : palette.text }}>
+                    {v ? 'newest on top' : 'newest below'}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+  
+            <Text style={[styles.label, { color: palette.text }]}>Peek side</Text>
+            <Text style={[styles.subLabel, { color: palette.text }]}>Collapsed deck only</Text>
+            <View style={styles.chips}>
+              {PEEK_SIDES.map((side) => (
+                <Pressable
+                  key={side}
+                  android_ripple={{ color: 'rgba(0,0,0,0.12)', borderless: false, foreground: true }}
+                  onPress={() => {
+                    setPeekSide(side);
+                    if (stacked) toast.info(`peekSide: ${side}`);
+                  }}
+                  style={({ pressed }) => [
+                    chipStyle(peekSide === side),
+                    pressed && Platform.OS !== 'android' && { opacity: 0.85 },
+                  ]}
+                >
+                  <Text style={{ color: peekSide === side ? palette.buttonText : palette.text }}>
+                    {side}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
+  
+          <Text style={[styles.sectionHeading, { color: palette.text }]}>Demos</Text>
+          <View style={cardStyle}>
+            <Text style={[styles.subLabel, { color: palette.text }]}>Built-in</Text>
+            <View style={styles.demoGroup}>
+              {coreDemos.map((d) => primaryBtn(d.label, d.run, d.label))}
+            </View>
+  
+            <Text style={[styles.subLabelSpaced, { color: palette.text }]}>Custom</Text>
+            <View style={styles.demoGroup}>
+              {customDemos.map((d) => primaryBtn(d.label, d.run, d.label))}
+            </View>
+  
+            <Text style={[styles.subLabelSpaced, { color: palette.text }]}>Utilities</Text>
+            <View style={styles.demoGroup}>
               <Pressable
-                key={String(v)}
-                android_ripple={{ color: 'rgba(0,0,0,0.12)', borderless: false }}
-                onPress={() => setStacked(v)}
+                android_ripple={{ color: 'rgba(0,0,0,0.12)', borderless: false, foreground: true }}
+                onPress={() => toast.info('No close button here', { closeButton: false })}
                 style={({ pressed }) => [
-                  chipStyle(v === stacked),
+                  styles.button,
+                  { backgroundColor: palette.button },
+                  pressed && Platform.OS !== 'android' && { opacity: 0.92 },
+                ]}
+              >
+                <Text style={[styles.buttonText, { color: palette.buttonText }]}>
+                  Without close button
+                </Text>
+              </Pressable>
+              <Pressable
+                android_ripple={{ color: 'rgba(0,0,0,0.08)', borderless: false, foreground: true }}
+                onPress={() => toast.dismiss()}
+                style={({ pressed }) => [
+                  styles.buttonOutline,
+                  { borderColor: palette.cardBorder },
                   pressed && Platform.OS !== 'android' && { opacity: 0.85 },
                 ]}
               >
-                <Text style={{ color: v === stacked ? palette.buttonText : palette.text }}>
-                  {v ? 'stacked' : 'list'}
-                </Text>
+                <Text style={[styles.buttonText, { color: palette.text }]}>Dismiss all</Text>
               </Pressable>
-            ))}
+            </View>
           </View>
+  
+          <StatusBar style="auto" />
+        </ScrollView>
 
-          <Text style={[styles.label, { color: palette.text }]}>Stack order</Text>
-          <View style={styles.chips}>
-            {[false, true].map((v) => (
-              <Pressable
-                key={String(v)}
-                android_ripple={{ color: 'rgba(0,0,0,0.12)', borderless: false }}
-                onPress={() => setNewestOnTop(v)}
-                style={({ pressed }) => [
-                  chipStyle(v === newestOnTop),
-                  pressed && Platform.OS !== 'android' && { opacity: 0.85 },
-                ]}
-              >
-                <Text style={{ color: v === newestOnTop ? palette.buttonText : palette.text }}>
-                  {v ? 'newest on top' : 'newest below'}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-        </View>
-
-        <Text style={[styles.sectionHeading, { color: palette.text }]}>Demos</Text>
-        <View style={cardStyle}>
-          <Text style={[styles.subLabel, { color: palette.text }]}>Built-in</Text>
-          <View style={styles.demoGroup}>
-            {coreDemos.map((d) => primaryBtn(d.label, d.run, d.label))}
-          </View>
-
-          <Text style={[styles.subLabelSpaced, { color: palette.text }]}>Custom</Text>
-          <View style={styles.demoGroup}>
-            {customDemos.map((d) => primaryBtn(d.label, d.run, d.label))}
-          </View>
-
-          <Text style={[styles.subLabelSpaced, { color: palette.text }]}>Utilities</Text>
-          <View style={styles.demoGroup}>
-            <Pressable
-              android_ripple={{ color: 'rgba(0,0,0,0.12)', borderless: false }}
-              onPress={() => toast.info('No close button here', { closeButton: false })}
-              style={({ pressed }) => [
-                styles.button,
-                { backgroundColor: palette.button },
-                pressed && Platform.OS !== 'android' && { opacity: 0.92 },
-              ]}
-            >
-              <Text style={[styles.buttonText, { color: palette.buttonText }]}>
-                Without close button
+        <KeyboardAvoidingView behavior="padding" keyboardVerticalOffset={insets.top}>
+          <View style={keyboardFooterStyle}>
+            <Text style={[styles.sectionHeading, { color: palette.text, marginTop: 0 }]}>
+              Keyboard
+            </Text>
+            <View style={cardStyle}>
+              <Text style={[styles.keyboardHint, { color: palette.text }]}>
+                The field stays in this footer. Toasts use a bottom toaster with avoidKeyboard
+                and keyboardOffset.
               </Text>
-            </Pressable>
-            <Pressable
-              android_ripple={{ color: 'rgba(0,0,0,0.08)', borderless: false }}
-              onPress={() => toast.dismiss()}
-              style={({ pressed }) => [
-                styles.buttonOutline,
-                { borderColor: palette.cardBorder },
-                pressed && Platform.OS !== 'android' && { opacity: 0.85 },
-              ]}
-            >
-              <Text style={[styles.buttonText, { color: palette.text }]}>Dismiss all</Text>
-            </Pressable>
+              <TextInput
+                value={keyboardNote}
+                onChangeText={setKeyboardNote}
+                placeholder="Type a note..."
+                placeholderTextColor={dark ? '#71717A' : '#A1A1AA'}
+                style={[
+                  styles.textInput,
+                  {
+                    color: palette.text,
+                    borderColor: palette.cardBorder,
+                    backgroundColor: dark ? '#27272A' : '#FFFFFF',
+                  },
+                ]}
+                returnKeyType="done"
+                onSubmitEditing={() =>
+                  toast.success(keyboardNote.trim() || 'Saved note', { toasterId: 'keyboard' })
+                }
+              />
+              <Pressable
+                android_ripple={{ color: 'rgba(255,255,255,0.25)', borderless: false, foreground: true }}
+                onPress={() =>
+                  toast.info('Sitting above the keyboard', {
+                    toasterId: 'keyboard',
+                    duration: 5000,
+                  })
+                }
+                style={({ pressed }) => [
+                  styles.button,
+                  { backgroundColor: palette.button },
+                  pressed && Platform.OS !== 'android' && { opacity: 0.92 },
+                ]}
+              >
+                <Text style={[styles.buttonText, { color: palette.buttonText }]}>Show toast</Text>
+              </Pressable>
+            </View>
           </View>
-        </View>
-
-        <StatusBar style="auto" />
-      </ScrollView>
+        </KeyboardAvoidingView>
+      </View>
       <Toaster
         position={position}
         maxWidth={300}
         animation={{ preset }}
         newestOnTop={newestOnTop}
         stacked={stacked}
+        peekSide={peekSide === 'default' ? undefined : peekSide}
+      />
+      <Toaster
+        id="keyboard"
+        position="bottom"
+        avoidKeyboard
+        keyboardOffset={12}
       />
     </>
   );
@@ -371,6 +481,13 @@ export default function App() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  scroll: { flex: 1 },
+  keyboardFooter: {
+    width: '100%',
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
   screen: {
     flexGrow: 1,
     alignItems: 'center',
@@ -431,6 +548,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderRadius: 999,
     borderWidth: StyleSheet.hairlineWidth,
+    overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -438,6 +556,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 10,
+    overflow: 'hidden',
     width: '100%',
     alignItems: 'center',
   },
@@ -445,12 +564,23 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 10,
+    overflow: 'hidden',
     borderWidth: StyleSheet.hairlineWidth * 2,
     width: '100%',
     alignItems: 'center',
     backgroundColor: 'transparent',
   },
   buttonText: { fontWeight: '600', fontSize: 15 },
+  keyboardHint: { fontSize: 13, lineHeight: 19, opacity: 0.75, marginBottom: 4 },
+  textInput: {
+    width: '100%',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    fontSize: 15,
+    marginBottom: 4,
+  },
   feedback: { flex: 1, gap: 6 },
   feedbackContext: { fontSize: 12, lineHeight: 17, opacity: 0.95 },
   feedbackTitle: { fontWeight: '600', fontSize: 15 },

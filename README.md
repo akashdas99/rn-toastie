@@ -10,16 +10,50 @@
 [![GitHub stars](https://img.shields.io/github/stars/akashdas99/rn-toastie?style=social)](https://github.com/akashdas99/rn-toastie)
 [![Try it on Snack](https://img.shields.io/badge/Try%20it%20on-Snack-4630EB.svg?logo=expo&logoColor=white)](https://snack.expo.dev/@akashdas5/rn-toastie)
 
+<p align="center">
+  <img src="assets/social-preview.png" width="720" alt="rn-toastie — Toast notifications for React Native. Stack or list · Swipe · Promises · Themes · Custom UI" />
+</p>
+
 Swipeable, stackable toast notifications for React Native and Expo, built on Reanimated and
 Gesture Handler.
-
-**[Live demo on Expo Snack](https://snack.expo.dev/@akashdas5/rn-toastie)**: open it in the browser or scan the QR code with Expo Go.
 
 - Stacked deck that expands on tap, or a plain list like react-toastify
 - Swipe to dismiss, close button, action button
 - Success, error, info, loading and promise toasts, plus fully custom components
-- 8 positions, light/dark themes, configurable animations
+- 8 positions with custom edge offsets, light/dark themes, configurable animations
 - Accessible: screen-reader announcements, reduce-motion support, RTL
+
+If rn-toastie is useful to you, [star it on GitHub](https://github.com/akashdas99/rn-toastie). It helps other people find it.
+
+## Contents
+
+- [Install](#install)
+- [Setup](#setup)
+- [Usage](#usage)
+  - [Action button](#action-button)
+  - [Promise](#promise)
+  - [Loading + manual update](#loading--manual-update)
+- [Methods](#methods)
+- [Toaster props](#toaster-props)
+- [Toast options](#toast-options)
+- [Custom components](#custom-components)
+- [Positions](#positions)
+  - [Offset](#offset)
+- [Stack order](#stack-order)
+- [List mode](#list-mode-no-stacking)
+- [Close button](#close-button)
+- [RTL](#rtl)
+- [Lifecycle](#lifecycle)
+- [Named toasters](#named-toasters)
+- [Theming](#theming)
+  - [Different colors for light and dark](#different-colors-for-light-and-dark)
+  - [Custom toasts](#custom-toasts)
+- [Animation](#animation)
+- [Progress bar](#progress-bar)
+- [Haptics](#haptics)
+- [Accessibility](#accessibility)
+- [Keyboard](#keyboard)
+- [Development](#development)
 
 ## Install
 
@@ -89,7 +123,7 @@ toast.update(id, { title: 'Uploaded', type: 'success', duration: 4000 });
 `update` accepts `title`, `description`, `type`, `duration`, `action`, `icon` and `render`,
 and restarts the countdown.
 
-## API
+## Methods
 
 | Method | Description |
 | --- | --- |
@@ -110,11 +144,13 @@ Each toast runs its own timer, so the oldest leaves first.
 | --- | --- | --- |
 | `id` | `'default'` | Name of this toaster. Target it with `toast('..', { toasterId })` |
 | `position` | `'top'` | One of the eight [positions](#positions) |
+| `offset` | `{ top: 8, bottom: 8, left: 16, right: 16 }` | Distance (px) from the screen edges, see [Offset](#offset) |
 | `maxWidth` | `380` | Max toast width (px) for the left, center and right positions |
 | `stacked` | `true` | Collapsed deck that expands on tap. `false` = [list mode](#list-mode-no-stacking) |
 | `maxVisible` | `3` stacked, unlimited in list mode | How many toasts show at once |
 | `newestOnTop` | `false` | Put the newest toast above the older ones (see [Stack order](#stack-order)) |
 | `peek` | `12` | Vertical peek (px) of each card behind the front one |
+| `peekSide` | top: `bottom`, bottom: `top` | Collapsed deck only: peek lower (`bottom`) or higher (`top`) on the screen |
 | `peekScale` | `0.05` | Scale reduction per level in the collapsed deck |
 | `gap` | `8` | Gap (px) between toasts when expanded or in list mode |
 | `closeButton` | `true` | Close (x) button on built-in toasts |
@@ -125,6 +161,7 @@ Each toast runs its own timer, so the oldest leaves first.
 | `haptics` | | `(event) => void`, see [Haptics](#haptics) |
 | `rtl` | `I18nManager.isRTL` | Mirror the layout and progress bar |
 | `avoidKeyboard` | `true` on iOS, `false` on Android | Lift a bottom toaster above the keyboard |
+| `keyboardOffset` | `0` | Extra gap (px) above the keyboard when `avoidKeyboard` is on |
 
 ## Toast options
 
@@ -183,13 +220,31 @@ Eight positions: `top`, `bottom` (full width) and `top-left`, `top-center`, `top
 Left and right are physical edges, also in RTL. On a phone the aligned positions look almost like
 the full-width ones, so they matter mostly on tablets and foldables.
 
+### Offset
+Move the stack away from the screen edges, for example below a custom header or above a tab bar.
+Offsets are measured inside the safe area, so you don't need to add the notch or home indicator.
+```tsx
+<Toaster position="top" offset={{ top: 64 }} />            // below a 64px header
+<Toaster position="bottom" offset={{ bottom: 72 }} />      // above a tab bar
+<Toaster position="bottom-right" offset={24} />            // 24px from every edge
+```
+A number sets all four sides. In an object, sides you leave out keep their defaults
+(`top` and `bottom` 8, `left` and `right` 16). On a bottom toaster the keyboard lift still
+applies, and the offset is added above the keyboard.
+
 ## Stack order
-By default a new toast goes below the older ones (on a bottom toaster it stays on the bottom edge
-and pushes older ones up). Set `newestOnTop` to put the newest above them instead.
+`newestOnTop` controls list order and which toast sits on the screen edge. By default a new toast
+goes below the older ones (on a bottom toaster it stays on the bottom edge and pushes older ones
+up). Set `newestOnTop` to put the newest at the edge on top toasters instead.
 ```tsx
 <Toaster position="top" newestOnTop />
 ```
-The newest toast is always the front card of the collapsed deck.
+The front card of the collapsed deck is always the toast at that edge, same as the list.
+
+`peekSide` only changes which way the deck peeks behind that front card. It does not change order.
+```tsx
+<Toaster position="top" peekSide="top" />   {/* cards peek upward behind the front toast */}
+```
 
 ## List mode (no stacking)
 Show toasts one below the other at full size, like react-toastify:
@@ -346,10 +401,16 @@ import * as Haptics from 'expo-haptics';
 `<Toaster position="bottom" avoidKeyboard />` lifts the stack above the keyboard.
 Default is on for iOS and off for Android, where `adjustResize` already moves the window.
 Set it explicitly if your Android setup differs (for example edge-to-edge).
+Add space between the toast and the keyboard with `keyboardOffset` (it does not apply when
+the keyboard is hidden; use `offset.bottom` for a permanent bottom inset).
+```tsx
+<Toaster position="bottom" avoidKeyboard keyboardOffset={12} />
+```
 
 ## Development
 ```bash
 npm install
+npm test
 npm run typecheck
 npm run build      # react-native-builder-bob -> lib/commonjs, lib/module, lib/typescript
 ```

@@ -55,6 +55,17 @@ export type ToastPosition =
   | 'top' | 'top-left' | 'top-center' | 'top-right'
   | 'bottom' | 'bottom-left' | 'bottom-center' | 'bottom-right';
 
+/** Which way cards peek in a collapsed deck: lower or higher on the screen. */
+export type ToastPeekSide = 'top' | 'bottom';
+
+/**
+ * Distance (px) between the toasts and the screen edges, measured inside the
+ * safe area. A number applies to every side.
+ */
+export type ToastOffset =
+  | number
+  | { top?: number; bottom?: number; left?: number; right?: number };
+
 export interface ToastAction {
   label: string;
   onPress: () => void;

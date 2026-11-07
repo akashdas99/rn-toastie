@@ -14,13 +14,14 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { exitFallbackMs, resolveAnimation } from './animation';
+import { stackOffsetSign, toastFrame } from './layout';
 import type { ResolvedAnimation } from './animation';
 import { runOnRN } from './compat';
 import { dismiss, remove, update } from './store';
 import type { ToastTheme } from './theme';
 import { ToastIcon } from './ToastIcon';
 import type {
-  HapticEvent, SwipeDirection, ToastData, ToastPosition, ToastRenderContext,
+  HapticEvent, SwipeDirection, ToastData, ToastPeekSide, ToastPosition, ToastRenderContext,
 } from './types';
 
 const BTN_SLOP = 8;
@@ -29,7 +30,10 @@ const REDUCED_MS = 120;
 interface Props {
   toast: ToastData;
   index: number;
+  /** Front card is 0; higher values draw behind it */
+  layer: number;
   offset: number;
+  peekSide: ToastPeekSide;
   position: ToastPosition;
   /** Laid out as a full-size list instead of a collapsed deck */
   expanded: boolean;
@@ -42,6 +46,9 @@ interface Props {
   showProgress: boolean;
   rtl: boolean;
   maxWidth: number;
+  /** Distance (px) from the left and right screen edges */
+  left: number;
+  right: number;
   animation: ResolvedAnimation;
   closeButton: boolean;
   haptics?: (event: HapticEvent) => void;
@@ -50,8 +57,9 @@ interface Props {
 }
 
 export function ToastItem({
-  toast, index, offset, position, expanded, hidden, paused, peekScale,
-  theme, showProgress, rtl, maxWidth, animation, closeButton, haptics, onMeasure, onPress,
+  toast, index, layer, offset, peekSide, position, expanded, hidden, paused, peekScale,
+  theme, showProgress, rtl, maxWidth, left, right, animation, closeButton, haptics,
+  onMeasure, onPress,
 }: Props) {
   const anim = useMemo(
     () => resolveAnimation(animation, toast.animation),
@@ -59,28 +67,14 @@ export function ToastItem({
   );
   const { width } = useWindowDimensions();
   const isTop = position.startsWith('top');
-  const dir = isTop ? 1 : -1;
-  const align = position.endsWith('left')
-    ? 'left'
-    : position.endsWith('right')
-      ? 'right'
-      : position.endsWith('center')
-        ? 'center'
-        : 'full';
-  const sideWidth = Math.min(width - 32, maxWidth);
-  const alignStyle =
-    align === 'full'
-      ? { left: 16, right: 16 }
-      : align === 'left'
-        ? { width: sideWidth, left: 16 }
-        : align === 'right'
-          ? { width: sideWidth, right: 16 }
-          : { width: sideWidth, left: (width - sideWidth) / 2 };
+  const edgeDir = isTop ? 1 : -1;
+  const offsetSign = stackOffsetSign(expanded, position, peekSide);
+  const alignStyle = toastFrame({ position, width, left, right, maxWidth });
   const isCustom = toast.render !== undefined;
   const canExpand = toast.expandOnTap ?? !isCustom;
 
   const enter = useSharedValue(1);
-  const stackY = useSharedValue(dir * offset);
+  const stackY = useSharedValue(offsetSign * offset);
   const scale = useSharedValue(1);
   const opacity = useSharedValue(anim.preset === 'none' ? 1 : 0);
   const tx = useSharedValue(0);
@@ -113,7 +107,7 @@ export function ToastItem({
   }, [toast.id, anim]);
 
   const interactive = !toast.dismissed && !hidden;
-  const reachable = interactive && (index === 0 || expanded);
+  const reachable = interactive && (layer === 0 || expanded);
 
   // Enter
   useEffect(() => {
@@ -139,10 +133,12 @@ export function ToastItem({
   // Re-stack when position in the deck changes
   useEffect(() => {
     if (toast.dismissed) return;
-    stackY.value = animateTo(dir * offset);
-    scale.value = animateTo(expanded ? 1 : Math.max(1 - index * peekScale, 0.8));
+    stackY.value = animateTo(offsetSign * offset);
+    scale.value = animateTo(expanded ? 1 : Math.max(1 - layer * peekScale, 0.8));
     opacity.value = withTiming(hidden ? 0 : 1, { duration: anim.restackDuration });
-  }, [offset, index, expanded, toast.dismissed, dir, peekScale, hidden, anim.restackDuration]);
+  }, [
+    offset, layer, expanded, toast.dismissed, offsetSign, peekScale, hidden, anim.restackDuration,
+  ]);
 
   // Exit. A swipe already owns the animation and the removal.
   useEffect(() => {
@@ -286,7 +282,7 @@ export function ToastItem({
   const { preset, enterDistance, enterScale } = anim;
   const animatedStyle = useAnimatedStyle(() => {
     const e = enter.value;
-    const slide = preset === 'slide' ? dir * e * enterDistance : 0;
+    const slide = preset === 'slide' ? edgeDir * e * enterDistance : 0;
     const fade = preset === 'fade' || preset === 'scale' ? Math.min(1, Math.max(0, 1 - e)) : 1;
     const grow = preset === 'scale' ? 1 - e * (1 - enterScale) : 1;
     return {
@@ -347,8 +343,8 @@ export function ToastItem({
           { direction: rtl ? 'rtl' : 'ltr' },
           isTop ? { top: 0 } : { bottom: 0 },
           {
-            zIndex: toast.dismissed ? 1100 : 1000 - index,
-            elevation: toast.unstyled ? 0 : toast.dismissed ? 20 : Math.max(1, 12 - index),
+            zIndex: toast.dismissed ? 1100 : 1000 - layer,
+            elevation: toast.unstyled ? 0 : toast.dismissed ? 20 : Math.max(1, 12 - layer),
           },
           animatedStyle,
         ]}
