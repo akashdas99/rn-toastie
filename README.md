@@ -55,6 +55,7 @@ If rn-toastie is useful to you, [star it on GitHub](https://github.com/akashdas9
 - [Accessibility](#accessibility)
 - [Keyboard](#keyboard)
 - [Upgrading from 0.1](#upgrading-from-01)
+- [Changelog](CHANGELOG.md)
 - [Development](#development)
 
 ## Install
@@ -463,17 +464,27 @@ npm test
 npm run typecheck
 npm run build      # react-native-builder-bob -> lib/commonjs, lib/module, lib/typescript
 ```
+**Stable release.** Set `version` in `package.json` (for 0.2.0 it is `0.2.0`), point `example/package.json` at `"rn-toastie": "^0.2.0"`, then:
+
+```bash
+npm test
+npm run typecheck
+npm publish --dry-run
+npm publish
+```
+
+`npm publish` with no tag updates `latest`. [CHANGELOG.md](CHANGELOG.md) keeps every version. The GitHub release title is the version, so the notes are the `0.2.0` section without its `## 0.2.0` heading:
+
+```bash
+git tag v0.2.0
+git push origin HEAD --tags
+awk 'BEGIN{p=0} /^## 0.2.0/{p=1; next} /^## /{p=0} p' CHANGELOG.md > release-notes.md
+gh release create v0.2.0 --title "0.2.0" --notes-file release-notes.md
+```
+
 **Publish a beta** (does not change `latest` on npm):
 
 ```bash
 npm run build
 npm publish --tag beta
 ```
-
-**Example app** uses the beta tag from npm (`"rn-toastie": "beta"`). After you publish:
-
-```bash
-cd example && npm install && npm start
-```
-
-For a stable release, bump the version and run `npm publish` (no tag) when ready.
