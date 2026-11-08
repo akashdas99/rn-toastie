@@ -439,7 +439,7 @@ import * as Haptics from 'expo-haptics';
 - Each toast is an `alert` with a live region (`assertive` for errors, `polite` otherwise);
   iOS gets an explicit VoiceOver announcement.
 - Custom screen-reader actions: **Dismiss**, plus the action button's label when present.
-- Toasts hidden behind the front one are removed from the accessibility tree until the deck is expanded.
+- Toasts hidden behind the front one are removed from the accessibility tree until the deck is expanded. On Android, the newest toast is still announced in that state when it has an `accessibilityLabel`, title, or description. With none of those, nothing is announced.
 - Honors the OS "reduce motion" setting (springs become short fades).
 
 ## Keyboard
@@ -482,7 +482,7 @@ awk 'BEGIN{p=0} /^## 0.2.0/{p=1; next} /^## /{p=0} p' CHANGELOG.md > release-not
 gh release create v0.2.0 --title "0.2.0" --notes-file release-notes.md
 ```
 
-**Publish a beta** (does not change `latest` on npm):
+**Publish a beta** (does not change `latest` on npm). Set `version` in `package.json` to a distinct prerelease, such as `0.2.0-beta.0`, then:
 
 ```bash
 npm run build

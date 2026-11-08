@@ -16,7 +16,7 @@
 - `newestOnTop` now defaults to `true`. The newest toast sits above the older ones. On a top toaster it stays on the screen edge. On a bottom toaster the older toasts stay on the bottom edge and the newest sits above them.
 - The front card of a collapsed deck is the toast at the screen edge. `peekSide` only changes the peek direction, not the order.
 - Custom toasts are drawn with no default card. Supply your own background, border, padding, and shadow. `ctx.theme` still has the colors.
-- A toast hidden behind the front card is announced to Android screen readers. The live region stays silent until that toast is reachable.
+- On Android, the newest toast is announced while it sits behind the front card only when it has an `accessibilityLabel`, title, or description. With none of those, that announcement is skipped. The live region stays silent, and the toast stays out of the accessibility tree, until that toast is reachable.
 
 ### Removed
 
