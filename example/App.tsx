@@ -101,7 +101,7 @@ function AppBody() {
   const insets = useSafeAreaInsets();
   const [preset, setPreset] = useState<ToastAnimationPreset>('slide');
   const [position, setPosition] = useState<ToastPosition>('top');
-  const [newestOnTop, setNewestOnTop] = useState(false);
+  const [newestOnTop, setNewestOnTop] = useState(true);
   const [stacked, setStacked] = useState(true);
   const [peekSide, setPeekSide] = useState<PeekSideChoice>('default');
   const [globalStyles, setGlobalStyles] = useState(false);
@@ -419,7 +419,7 @@ function AppBody() {
   
             <Text style={[styles.label, { color: palette.text }]}>Stack order</Text>
             <View style={styles.chips}>
-              {[false, true].map((v) => (
+              {[true, false].map((v) => (
                 <Pressable
                   key={String(v)}
                   android_ripple={{ color: 'rgba(0,0,0,0.12)', borderless: false, foreground: true }}

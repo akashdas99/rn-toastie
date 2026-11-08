@@ -270,11 +270,15 @@ export function ToastItem({
     [canExpand, pan, tap],
   );
 
-  // Screen readers: iOS needs an explicit announcement, Android uses liveRegion.
+  // Screen readers: iOS needs an explicit announcement. Android uses liveRegion,
+  // which is silent while the toast is hidden behind the front card.
   const spoken =
     toast.accessibilityLabel ?? [toast.title, toast.description].filter(Boolean).join('. ');
+  const reachableRef = useRef(reachable);
+  reachableRef.current = reachable;
   useEffect(() => {
-    if (Platform.OS === 'ios' && index === 0 && !toast.dismissed && spoken) {
+    if (index !== 0 || toast.dismissed || !spoken) return;
+    if (Platform.OS === 'ios' || !reachableRef.current) {
       AccessibilityInfo.announceForAccessibility(spoken);
     }
   }, [spoken, index, toast.dismissed]);
@@ -328,7 +332,7 @@ export function ToastItem({
         accessibilityRole="alert"
         accessibilityLabel={spoken || undefined}
         accessibilityLiveRegion={
-          index === 0 && !toast.dismissed
+          index === 0 && reachable
             ? toast.type === 'error'
               ? 'assertive'
               : 'polite'

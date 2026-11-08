@@ -54,6 +54,7 @@ If rn-toastie is useful to you, [star it on GitHub](https://github.com/akashdas9
 - [Haptics](#haptics)
 - [Accessibility](#accessibility)
 - [Keyboard](#keyboard)
+- [Upgrading from 0.1](#upgrading-from-01)
 - [Development](#development)
 
 ## Install
@@ -149,7 +150,7 @@ Each toast runs its own timer, so the oldest leaves first.
 | `maxWidth` | `380` | Max toast width (px) for the left, center and right positions |
 | `stacked` | `true` | Collapsed deck that expands on tap. `false` = [list mode](#list-mode-no-stacking) |
 | `maxVisible` | `3` stacked, unlimited in list mode | How many toasts show at once |
-| `newestOnTop` | `false` | Put the newest toast above the older ones (see [Stack order](#stack-order)) |
+| `newestOnTop` | `true` | Put the newest toast above the older ones (see [Stack order](#stack-order)) |
 | `peek` | `12` | Vertical peek (px) of each card behind the front one |
 | `peekSide` | top: `bottom`, bottom: `top` | Collapsed deck only: peek lower (`bottom`) or higher (`top`) on the screen |
 | `peekScale` | `0.05` | Scale reduction per level in the collapsed deck |
@@ -234,11 +235,11 @@ A number sets all four sides. In an object, sides you leave out keep their defau
 applies, and the offset is added above the keyboard.
 
 ## Stack order
-`newestOnTop` controls list order and which toast sits on the screen edge. By default a new toast
-goes below the older ones (on a bottom toaster it stays on the bottom edge and pushes older ones
-up). Set `newestOnTop` to put the newest at the edge on top toasters instead.
+`newestOnTop` (default `true`) puts the newest toast above the older ones. On a top toaster the
+newest stays on the screen edge. On a bottom toaster the older toasts stay on the bottom edge and
+the newest sits above them. Set it to `false` to reverse that.
 ```tsx
-<Toaster position="top" newestOnTop />
+<Toaster position="top" newestOnTop={false} />
 ```
 The front card of the collapsed deck is always the toast at that edge, same as the list.
 
@@ -449,6 +450,11 @@ the keyboard is hidden; use `offset.bottom` for a permanent bottom inset).
 ```tsx
 <Toaster position="bottom" avoidKeyboard keyboardOffset={12} />
 ```
+
+## Upgrading from 0.1
+- **`unstyled` is removed.** Custom toasts are never wrapped in the default card now, so drop the
+  option. If you relied on the card, add the background, border, padding and shadow in your own
+  component (`ctx.theme` has the colors).
 
 ## Development
 ```bash

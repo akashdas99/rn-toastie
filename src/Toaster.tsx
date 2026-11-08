@@ -1,17 +1,49 @@
-import React, { useCallback, useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from 'react';
-import { I18nManager, Keyboard, Platform, StyleSheet, useColorScheme } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { defaultAnimation, resolveAnimation } from './animation';
-import { defaultPeekSide, resolveOffset, stackLayer, stackOffsets } from './layout';
-import { getSnapshot, setToasterAnimation, subscribe } from './store';
-import { darkTheme, lightTheme } from './theme';
-import type { ToastTheme, ToastThemeModeOverrides, ToastThemeOverrides } from './theme';
-import { ToastItem } from './ToastItem';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+  type ReactNode,
+} from "react";
+import {
+  I18nManager,
+  Keyboard,
+  Platform,
+  StyleSheet,
+  useColorScheme,
+} from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { defaultAnimation, resolveAnimation } from "./animation";
+import {
+  anchorOffset,
+  defaultPeekSide,
+  resolveOffset,
+  stackLayer,
+  stackOffsets,
+} from "./layout";
+import { getSnapshot, setToasterAnimation, subscribe } from "./store";
+import { darkTheme, lightTheme } from "./theme";
 import type {
-  HapticEvent, ToastAnimation, ToastOffset, ToastPeekSide, ToastPosition, ToastStyles,
+  ToastTheme,
+  ToastThemeModeOverrides,
+  ToastThemeOverrides,
+} from "./theme";
+import { ToastItem } from "./ToastItem";
+import type {
+  HapticEvent,
+  ToastAnimation,
+  ToastOffset,
+  ToastPeekSide,
+  ToastPosition,
+  ToastStyles,
   ToastType,
-} from './types';
+} from "./types";
 
 export interface ToasterProps {
   /** Name of this toaster. Target it with toast('..', { toasterId }). */
@@ -34,7 +66,7 @@ export interface ToasterProps {
   /** Mirror the toast layout and progress bar. Defaults to I18nManager.isRTL. */
   rtl?: boolean;
   /** 'system' follows the device color scheme */
-  theme?: 'light' | 'dark' | 'system';
+  theme?: "light" | "dark" | "system";
   /**
    * Override any theme color. Pass `{ light, dark }` to use different overrides
    * for each color scheme; a plain object applies to both.
@@ -78,21 +110,22 @@ export interface ToasterProps {
   /** Close (x) button on every toast. A toast's own `closeButton` option overrides it. Default true. */
   closeButton?: boolean;
   /**
-   * Put the newest toast visually above the older ones. Default false: the newest
-   * goes below them (and stays on the bottom edge for bottom toasters).
+   * Put the newest toast visually above the older ones. Default true. On a top
+   * toaster the newest stays on the screen edge; on a bottom toaster it sits
+   * above the older ones. Set false to reverse that.
    */
   newestOnTop?: boolean;
 }
 
 export function Toaster({
-  id = 'default',
-  position = 'top',
+  id = "default",
+  position = "top",
   offset,
   maxWidth = 380,
   rtl = I18nManager.isRTL,
-  avoidKeyboard = Platform.OS === 'ios',
+  avoidKeyboard = Platform.OS === "ios",
   keyboardOffset = 0,
-  theme = 'system',
+  theme = "system",
   themeOverrides,
   styles,
   icons,
@@ -106,22 +139,25 @@ export function Toaster({
   peekScale = 0.05,
   animation,
   closeButton = true,
-  newestOnTop = false,
+  newestOnTop = true,
 }: ToasterProps) {
   const insets = useSafeAreaInsets();
   const scheme = useColorScheme();
   const all = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
-  const toasts = useMemo(() => all.filter((t) => t.toasterId === id), [all, id]);
+  const toasts = useMemo(
+    () => all.filter((t) => t.toasterId === id),
+    [all, id],
+  );
   const kb = useSharedValue(0);
   const [expanded, setExpanded] = useState(false);
   const [heights, setHeights] = useState<Record<string, number>>({});
 
   const resolvedTheme: ToastTheme = useMemo(() => {
-    const dark = theme === 'dark' || (theme === 'system' && scheme === 'dark');
+    const dark = theme === "dark" || (theme === "system" && scheme === "dark");
     const base = dark ? darkTheme : lightTheme;
     const o: ToastThemeOverrides | undefined =
-      themeOverrides && ('light' in themeOverrides || 'dark' in themeOverrides)
-        ? themeOverrides[dark ? 'dark' : 'light']
+      themeOverrides && ("light" in themeOverrides || "dark" in themeOverrides)
+        ? themeOverrides[dark ? "dark" : "light"]
         : (themeOverrides as ToastThemeOverrides | undefined);
     return {
       ...base,
@@ -130,7 +166,10 @@ export function Toaster({
     };
   }, [theme, scheme, themeOverrides]);
 
-  const anim = useMemo(() => resolveAnimation(defaultAnimation, animation), [animation]);
+  const anim = useMemo(
+    () => resolveAnimation(defaultAnimation, animation),
+    [animation],
+  );
 
   useEffect(() => {
     setToasterAnimation(id, anim);
@@ -138,18 +177,28 @@ export function Toaster({
   }, [id, anim]);
 
   useEffect(() => {
-    if (!avoidKeyboard || position.startsWith('top')) {
+    if (!avoidKeyboard || position.startsWith("top")) {
       kb.value = 0;
       return;
     }
-    kb.value = Keyboard.metrics()?.height ?? 0;
-    const ios = Platform.OS === 'ios';
-    const show = Keyboard.addListener(ios ? 'keyboardWillShow' : 'keyboardDidShow', (e) => {
-      kb.value = withTiming(e.endCoordinates.height, { duration: e.duration || 250 });
-    });
-    const hide = Keyboard.addListener(ios ? 'keyboardWillHide' : 'keyboardDidHide', (e) => {
-      kb.value = withTiming(0, { duration: e.duration || 250 });
-    });
+    // react-native-web's Keyboard has no metrics().
+    kb.value =
+      typeof Keyboard.metrics === "function" ? (Keyboard.metrics()?.height ?? 0) : 0;
+    const ios = Platform.OS === "ios";
+    const show = Keyboard.addListener(
+      ios ? "keyboardWillShow" : "keyboardDidShow",
+      (e) => {
+        kb.value = withTiming(e.endCoordinates.height, {
+          duration: e.duration || 250,
+        });
+      },
+    );
+    const hide = Keyboard.addListener(
+      ios ? "keyboardWillHide" : "keyboardDidHide",
+      (e) => {
+        kb.value = withTiming(0, { duration: e.duration || 250 });
+      },
+    );
     return () => {
       show.remove();
       hide.remove();
@@ -161,21 +210,12 @@ export function Toaster({
   const left = insets.left + edge.left;
   const right = insets.right + edge.right;
 
-  const insetTop = insets.top;
-  const insetBottom = insets.bottom;
-  const edgeTop = edge.top;
-  const edgeBottom = edge.bottom;
+  const vInsets = { top: insets.top, bottom: insets.bottom };
+  const vEdge = { top: edge.top, bottom: edge.bottom };
 
-  const containerStyle = useAnimatedStyle(() => {
-    'worklet';
-    if (position.startsWith('top')) {
-      return { top: insetTop + edgeTop };
-    }
-    const kh = kb.value;
-    return {
-      bottom: Math.max(kh, insetBottom) + edgeBottom + (kh > 0 ? keyboardOffset : 0),
-    };
-  });
+  const containerStyle = useAnimatedStyle(() =>
+    anchorOffset(position, vInsets, kb.value, vEdge, keyboardOffset),
+  );
 
   const active = useMemo(() => toasts.filter((t) => !t.dismissed), [toasts]);
 
@@ -226,7 +266,10 @@ export function Toaster({
   if (toasts.length === 0) return null;
 
   return (
-    <Animated.View pointerEvents="box-none" style={[sheet.container, containerStyle]}>
+    <Animated.View
+      pointerEvents="box-none"
+      style={[sheet.container, containerStyle]}
+    >
       {toasts.map((t) => {
         const index = active.indexOf(t);
         const hidden = index >= shown;
@@ -264,5 +307,5 @@ export function Toaster({
 }
 
 const sheet = StyleSheet.create({
-  container: { position: 'absolute', left: 0, right: 0, zIndex: 9999 },
+  container: { position: "absolute", left: 0, right: 0, zIndex: 9999 },
 });
