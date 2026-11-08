@@ -20,8 +20,10 @@ import { runOnRN } from './compat';
 import { dismiss, remove, update } from './store';
 import type { ToastTheme } from './theme';
 import { ToastIcon } from './ToastIcon';
+import type { ReactNode } from 'react';
 import type {
   HapticEvent, SwipeDirection, ToastData, ToastPeekSide, ToastPosition, ToastRenderContext,
+  ToastStyles, ToastType,
 } from './types';
 
 const BTN_SLOP = 8;
@@ -51,6 +53,8 @@ interface Props {
   right: number;
   animation: ResolvedAnimation;
   closeButton: boolean;
+  toastStyles?: ToastStyles;
+  icons?: Partial<Record<ToastType, ReactNode>>;
   haptics?: (event: HapticEvent) => void;
   onMeasure: (id: string, height: number) => void;
   onPress: () => void;
@@ -58,9 +62,10 @@ interface Props {
 
 export function ToastItem({
   toast, index, layer, offset, peekSide, position, expanded, hidden, paused, peekScale,
-  theme, showProgress, rtl, maxWidth, left, right, animation, closeButton, haptics,
-  onMeasure, onPress,
+  theme, showProgress, rtl, maxWidth, left, right, animation, closeButton, toastStyles, icons,
+  haptics, onMeasure, onPress,
 }: Props) {
+  const variant = toastStyles?.[toast.type];
   const anim = useMemo(
     () => resolveAnimation(animation, toast.animation),
     [animation, toast.animation],
@@ -307,6 +312,7 @@ export function ToastItem({
 
   const leading =
     toast.icon ??
+    icons?.[toast.type] ??
     (toast.type === 'loading' ? (
       <ActivityIndicator size="small" color={theme.title} />
     ) : (
@@ -336,33 +342,47 @@ export function ToastItem({
         accessibilityElementsHidden={!reachable}
         importantForAccessibility={reachable ? 'yes' : 'no-hide-descendants'}
         style={[
-          styles.item,
-          { backgroundColor: theme.background, borderColor: theme.border },
-          toast.unstyled && styles.unstyled,
+          isCustom ? sheet.customShell : sheet.item,
+          !isCustom && { backgroundColor: theme.background, borderColor: theme.border },
+          !isCustom && toastStyles?.toast,
+          !isCustom && variant?.toast,
           alignStyle,
           { direction: rtl ? 'rtl' : 'ltr' },
           isTop ? { top: 0 } : { bottom: 0 },
           {
             zIndex: toast.dismissed ? 1100 : 1000 - layer,
-            elevation: toast.unstyled ? 0 : toast.dismissed ? 20 : Math.max(1, 12 - layer),
+            elevation: isCustom
+              ? 0
+              : toast.dismissed
+                ? 20
+                : Math.max(1, 12 - layer),
           },
           animatedStyle,
         ]}
       >
         {isCustom ? (
-          <View style={styles.custom}>
-            <CustomContent render={toast.render!} ctx={ctx} />
-          </View>
+          <CustomContent render={toast.render!} ctx={ctx} />
         ) : (
           <>
-            <View style={styles.icon}>{leading}</View>
+            <View style={sheet.icon}>{leading}</View>
 
-            <View style={styles.body}>
-              <Text style={[styles.title, { color: theme.title }]} numberOfLines={2}>
+            <View style={sheet.body}>
+              <Text
+                style={[sheet.title, { color: theme.title }, toastStyles?.title, variant?.title]}
+                numberOfLines={2}
+              >
                 {toast.title}
               </Text>
               {toast.description ? (
-                <Text style={[styles.description, { color: theme.description }]} numberOfLines={3}>
+                <Text
+                  style={[
+                    sheet.description,
+                    { color: theme.description },
+                    toastStyles?.description,
+                    variant?.description,
+                  ]}
+                  numberOfLines={3}
+                >
                   {toast.description}
                 </Text>
               ) : null}
@@ -370,13 +390,25 @@ export function ToastItem({
 
             {toast.action ? (
               <View
-                style={[styles.actionWrap, { backgroundColor: theme.actionBackground }]}
+                style={[
+                  sheet.actionWrap,
+                  { backgroundColor: theme.actionBackground },
+                  toastStyles?.action,
+                  variant?.action,
+                ]}
                 onLayout={(e) => {
                   const { x, y, width: w, height: h } = e.nativeEvent.layout;
                   btn.value = { x, y, w, h };
                 }}
               >
-                <Text style={[styles.actionText, { color: theme.actionText }]}>
+                <Text
+                  style={[
+                    sheet.actionText,
+                    { color: theme.actionText },
+                    toastStyles?.actionText,
+                    variant?.actionText,
+                  ]}
+                >
                   {toast.action.label}
                 </Text>
               </View>
@@ -384,23 +416,37 @@ export function ToastItem({
 
             {closeButton ? (
               <View
-                style={[styles.close, { backgroundColor: theme.actionBackground }]}
+                style={[
+                  sheet.close,
+                  { backgroundColor: theme.actionBackground },
+                  toastStyles?.close,
+                  variant?.close,
+                ]}
                 onLayout={(e) => {
                   const { x, y, width: w, height: h } = e.nativeEvent.layout;
                   closeBtn.value = { x, y, w, h };
                 }}
               >
-                <View style={[styles.closeBar, { backgroundColor: theme.description, transform: [{ rotate: '45deg' }] }]} />
-                <View style={[styles.closeBar, { backgroundColor: theme.description, transform: [{ rotate: '-45deg' }] }]} />
+                <View style={[sheet.closeBar, { backgroundColor: theme.description, transform: [{ rotate: '45deg' }] }]} />
+                <View style={[sheet.closeBar, { backgroundColor: theme.description, transform: [{ rotate: '-45deg' }] }]} />
               </View>
             ) : null}
           </>
         )}
 
-        {showProgress && !toast.unstyled && isFinite(toast.duration) && !toast.dismissed ? (
-          <View style={styles.progressTrack} pointerEvents="none">
+        {showProgress && !isCustom && isFinite(toast.duration) && !toast.dismissed ? (
+          <View
+            style={[sheet.progressTrack, toastStyles?.progressTrack, variant?.progressTrack]}
+            pointerEvents="none"
+          >
             <Animated.View
-              style={[styles.progressBar, { backgroundColor: theme.colors[toast.type] }, progressStyle]}
+              style={[
+                sheet.progressBar,
+                { backgroundColor: theme.colors[toast.type] },
+                toastStyles?.progress,
+                variant?.progress,
+                progressStyle,
+              ]}
             />
           </View>
         ) : null}
@@ -416,7 +462,7 @@ function CustomContent({
   return <>{typeof render === 'function' ? render(ctx) : render}</>;
 }
 
-const styles = StyleSheet.create({
+const sheet = StyleSheet.create({
   item: {
     position: 'absolute',
     flexDirection: 'row',
@@ -432,17 +478,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 8 },
     elevation: 8,
   },
-  custom: { flex: 1 },
-  unstyled: {
-    backgroundColor: 'transparent',
-    borderWidth: 0,
-    padding: 0,
-    paddingVertical: 0,
-    paddingStart: 0,
-    paddingEnd: 0,
-    shadowOpacity: 0,
-    elevation: 0,
-  },
+  /** Positioning only; custom toasts supply their own UI. */
+  customShell: { position: 'absolute' },
   icon: { marginEnd: 12, minWidth: 28, alignItems: 'center', justifyContent: 'center' },
   body: { flex: 1 },
   title: { fontSize: 14.5, fontWeight: '600', letterSpacing: -0.1 },

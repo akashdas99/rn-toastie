@@ -44,13 +44,12 @@ describe('toast', () => {
 
   it('stores a custom render with an empty title', () => {
     const render = () => null;
-    toast.custom(render, { id: 'c', unstyled: true, accessibilityLabel: 'Banner' });
+    toast.custom(render, { id: 'c', accessibilityLabel: 'Banner' });
 
     expect(getSnapshot()[0]).toMatchObject({
       id: 'c',
       title: '',
       render,
-      unstyled: true,
       accessibilityLabel: 'Banner',
     });
   });

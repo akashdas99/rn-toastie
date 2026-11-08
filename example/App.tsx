@@ -14,7 +14,9 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Toaster, toast } from 'rn-toastie';
-import type { ToastAnimationPreset, ToastPeekSide, ToastPosition } from 'rn-toastie';
+import type {
+  ToastAnimationPreset, ToastOffset, ToastPeekSide, ToastPosition, ToastStyles,
+} from 'rn-toastie';
 
 type PeekSideChoice = ToastPeekSide | 'default';
 const PEEK_SIDES: PeekSideChoice[] = ['default', 'top', 'bottom'];
@@ -24,6 +26,65 @@ const BOTTOM_POSITIONS: ToastPosition[] = ['bottom', 'bottom-left', 'bottom-cent
 
 const PRESETS: ToastAnimationPreset[] = ['slide', 'fade', 'scale', 'none'];
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+const OFFSET_CHOICES: { label: string; value: number }[] = [
+  { label: 'default', value: 0 },
+  { label: '56px inset', value: 56 },
+];
+
+function TypeIcon({ glyph, color }: { glyph: string; color: string }) {
+  return (
+    <View
+      style={{
+        width: 28,
+        height: 28,
+        borderRadius: 14,
+        backgroundColor: `${color}22`,
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <Text style={{ color, fontWeight: '700', fontSize: 14 }}>{glyph}</Text>
+    </View>
+  );
+}
+
+function brandedToastStyles(dark: boolean): ToastStyles {
+  return {
+    toast: { borderRadius: 12, paddingVertical: 14 },
+    title: { fontSize: 15, fontWeight: '700' },
+    progressTrack: {
+      start: 16,
+      end: 16,
+      bottom: 6,
+      height: 3,
+      backgroundColor: dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)',
+    },
+    progress: { height: 3, borderRadius: 2, opacity: 1 },
+    success: {
+      toast: {
+        backgroundColor: dark ? '#052E16' : '#ECFDF5',
+        borderColor: dark ? '#166534' : '#86EFAC',
+      },
+      title: { color: dark ? '#86EFAC' : '#14532D' },
+    },
+    error: {
+      toast: {
+        backgroundColor: dark ? '#450A0A' : '#FEF2F2',
+        borderColor: dark ? '#991B1B' : '#FCA5A5',
+      },
+      title: { color: dark ? '#FCA5A5' : '#7F1D1D' },
+      progress: { backgroundColor: dark ? '#F87171' : '#DC2626' },
+    },
+    info: {
+      toast: {
+        backgroundColor: dark ? '#172554' : '#EFF6FF',
+        borderColor: dark ? '#1D4ED8' : '#93C5FD',
+      },
+      title: { color: dark ? '#93C5FD' : '#1E3A8A' },
+    },
+  };
+}
 
 type Palette = {
   bg: string;
@@ -43,6 +104,8 @@ function AppBody() {
   const [newestOnTop, setNewestOnTop] = useState(false);
   const [stacked, setStacked] = useState(true);
   const [peekSide, setPeekSide] = useState<PeekSideChoice>('default');
+  const [globalStyles, setGlobalStyles] = useState(false);
+  const [edgeInset, setEdgeInset] = useState(0);
   const [keyboardNote, setKeyboardNote] = useState('');
 
   const palette: Palette = useMemo(
@@ -105,6 +168,14 @@ function AppBody() {
             duration: 6000,
           }),
       },
+      {
+        label: 'Styled variants',
+        run: () => {
+          toast.success('Payment received');
+          setTimeout(() => toast.error('Card expired', { description: 'Update billing' }), 400);
+          setTimeout(() => toast.info('Receipt emailed'), 900);
+        },
+      },
     ],
     [],
   );
@@ -116,7 +187,12 @@ function AppBody() {
         run: () =>
           toast.custom(
             ({ dismiss, theme }) => (
-              <View style={styles.feedback}>
+              <View
+                style={[
+                  styles.feedbackCard,
+                  { backgroundColor: theme.background, borderColor: theme.border },
+                ]}
+              >
                 <Text style={[styles.feedbackContext, { color: theme.description }]}>
                   You tried the rn-toastie demos (types, layout, position).
                 </Text>
@@ -155,7 +231,7 @@ function AppBody() {
           ),
       },
       {
-        label: 'Custom: unstyled banner',
+        label: 'Custom: banner',
         run: () =>
           toast.custom(
             ({ dismiss }) => (
@@ -167,7 +243,7 @@ function AppBody() {
                 </Pressable>
               </View>
             ),
-            { unstyled: true, duration: 6000, accessibilityLabel: '50% off Pro until Sunday' },
+            { duration: 6000, accessibilityLabel: '50% off Pro until Sunday' },
           ),
       },
     ],
@@ -272,6 +348,30 @@ function AppBody() {
     [palette],
   );
 
+  const toasterOffset = useMemo((): ToastOffset | undefined => {
+    if (!edgeInset) return undefined;
+    if (position.startsWith('top')) return { top: edgeInset };
+    if (position.startsWith('bottom')) return { bottom: edgeInset };
+    return undefined;
+  }, [edgeInset, position]);
+
+  const toasterStyles = useMemo(
+    () => (globalStyles ? brandedToastStyles(dark) : undefined),
+    [dark, globalStyles],
+  );
+
+  const toasterIcons = useMemo(
+    () =>
+      globalStyles
+        ? {
+            success: <TypeIcon glyph="✓" color="#16A34A" />,
+            error: <TypeIcon glyph="!" color="#DC2626" />,
+            info: <TypeIcon glyph="i" color="#2563EB" />,
+          }
+        : undefined,
+    [globalStyles],
+  );
+
   return (
     <>
       <View style={[styles.root, { backgroundColor: palette.bg }]}>
@@ -283,7 +383,8 @@ function AppBody() {
         >
           <Text style={[styles.title, { color: palette.text }]}>rn-toastie</Text>
           <Text style={[styles.subtitle, { color: palette.text }]}>
-            Try built-in and custom toasts. Change options in Toaster, then tap a demo.
+            Built-in and custom toasts. Toggle global styles, offset, peek side, and layout on the
+            main Toaster; the keyboard footer uses a second toaster with avoidKeyboard.
           </Text>
 
           <Text style={[styles.sectionHeading, { color: palette.text }]}>Toaster</Text>
@@ -335,6 +436,56 @@ function AppBody() {
               ))}
             </View>
   
+            <Text style={[styles.label, { color: palette.text }]}>Global styles</Text>
+            <Text style={[styles.subLabel, { color: palette.text }]}>
+              Per-type card styles and default icons
+            </Text>
+            <View style={styles.chips}>
+              {[false, true].map((v) => (
+                <Pressable
+                  key={String(v)}
+                  android_ripple={{ color: 'rgba(0,0,0,0.12)', borderless: false, foreground: true }}
+                  onPress={() => {
+                    setGlobalStyles(v);
+                    toast.info(v ? 'Global styles on' : 'Global styles off');
+                  }}
+                  style={({ pressed }) => [
+                    chipStyle(v === globalStyles),
+                    pressed && Platform.OS !== 'android' && { opacity: 0.85 },
+                  ]}
+                >
+                  <Text style={{ color: v === globalStyles ? palette.buttonText : palette.text }}>
+                    {v ? 'on' : 'off'}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+
+            <Text style={[styles.label, { color: palette.text }]}>Offset</Text>
+            <Text style={[styles.subLabel, { color: palette.text }]}>
+              Extra inset on the active edge (top or bottom positions)
+            </Text>
+            <View style={styles.chips}>
+              {OFFSET_CHOICES.map(({ label, value }) => (
+                <Pressable
+                  key={label}
+                  android_ripple={{ color: 'rgba(0,0,0,0.12)', borderless: false, foreground: true }}
+                  onPress={() => {
+                    setEdgeInset(value);
+                    if (value) toast.info(`offset: ${value}px on ${position}`);
+                  }}
+                  style={({ pressed }) => [
+                    chipStyle(edgeInset === value),
+                    pressed && Platform.OS !== 'android' && { opacity: 0.85 },
+                  ]}
+                >
+                  <Text style={{ color: edgeInset === value ? palette.buttonText : palette.text }}>
+                    {label}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+
             <Text style={[styles.label, { color: palette.text }]}>Peek side</Text>
             <Text style={[styles.subLabel, { color: palette.text }]}>Collapsed deck only</Text>
             <View style={styles.chips}>
@@ -454,10 +605,13 @@ function AppBody() {
       <Toaster
         position={position}
         maxWidth={300}
+        offset={toasterOffset}
         animation={{ preset }}
         newestOnTop={newestOnTop}
         stacked={stacked}
         peekSide={peekSide === 'default' ? undefined : peekSide}
+        styles={toasterStyles}
+        icons={toasterIcons}
       />
       <Toaster
         id="keyboard"
@@ -581,7 +735,13 @@ const styles = StyleSheet.create({
     fontSize: 15,
     marginBottom: 4,
   },
-  feedback: { flex: 1, gap: 6 },
+  feedbackCard: {
+    width: '100%',
+    borderRadius: 16,
+    borderWidth: StyleSheet.hairlineWidth,
+    padding: 14,
+    gap: 6,
+  },
   feedbackContext: { fontSize: 12, lineHeight: 17, opacity: 0.95 },
   feedbackTitle: { fontWeight: '600', fontSize: 15 },
   feedbackHint: { fontSize: 13, lineHeight: 18 },

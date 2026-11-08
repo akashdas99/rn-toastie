@@ -47,6 +47,7 @@ If rn-toastie is useful to you, [star it on GitHub](https://github.com/akashdas9
 - [Named toasters](#named-toasters)
 - [Theming](#theming)
   - [Different colors for light and dark](#different-colors-for-light-and-dark)
+  - [Styles](#styles)
   - [Custom toasts](#custom-toasts)
 - [Animation](#animation)
 - [Progress bar](#progress-bar)
@@ -157,6 +158,8 @@ Each toast runs its own timer, so the oldest leaves first.
 | `showProgress` | `true` | Countdown bar on auto-dismissing toasts |
 | `theme` | `'system'` | `'light'`, `'dark'` or `'system'` |
 | `themeOverrides` | | Override any [theme](#theming) value, or `{ light, dark }` for each scheme |
+| `styles` | | Global layout and typography for built-in toasts (see [Styles](#styles)) |
+| `icons` | | Default icon per type; a toast's own `icon` wins (see [Styles](#styles)) |
 | `animation` | | Enter, exit, restack and swipe motion (see [Animation](#animation)) |
 | `haptics` | | `(event) => void`, see [Haptics](#haptics) |
 | `rtl` | `I18nManager.isRTL` | Mirror the layout and progress bar |
@@ -177,7 +180,6 @@ Each toast runs its own timer, so the oldest leaves first.
 | `onDismiss` | | Called once after the toast leaves the screen, for any reason |
 | `toasterId` | `'default'` | Which `<Toaster id>` shows it |
 | `animation` | Toaster's `animation` | Per-toast override (see [Animation](#animation)) |
-| `unstyled` | `false` | Custom toasts: remove the card background, border, padding and shadow |
 | `expandOnTap` | `true`, `false` for custom | Tap toggles the deck |
 | `accessibilityLabel` | title and description | Screen-reader text. Recommended for custom toasts |
 | `id` | auto | Reuse an id to replace an existing toast |
@@ -197,19 +199,18 @@ toast.custom(({ id, dismiss, update, theme }) => (
   />
 ), { duration: Infinity, accessibilityLabel: 'Uploading file' });
 
-// Full control over the look: no background, border, padding or shadow
-toast.custom(<PromoCard />, { unstyled: true });
+toast.custom(<PromoCard />, { duration: 6000 });
 ```
 
-- Your component renders inside the stack, so swipe-to-dismiss, stacking, expanding, auto-dismiss and
-  haptics still work. The height is measured, so any size is fine.
+- Custom toasts render only your component (no default card, progress bar or close button). Swipe-to-dismiss,
+  stacking, expanding, auto-dismiss and haptics still work. The height is measured, so any size is fine.
 - A function render is called inside a component, so hooks are allowed in it.
 - `ctx` gives you `id`, `type`, `theme`, `dismiss()` and `update(patch)`. `update({ render })` swaps the content.
 - Tapping a custom toast does **not** expand the deck by default, so buttons inside it never double-fire.
   Set `expandOnTap: true` if your content has no buttons.
 - Set `accessibilityLabel`. Without it a screen reader reads the text inside your component, but iOS
   won't announce the toast when it appears.
-- `unstyled` also hides the progress bar. Pass `duration: Infinity` to keep the toast until dismissed.
+- There is no library progress bar on custom toasts. Pass `duration: Infinity` to keep the toast until dismissed.
 
 ## Positions
 Eight positions: `top`, `bottom` (full width) and `top-left`, `top-center`, `top-right`,
@@ -325,6 +326,48 @@ Define the object outside render (or `useMemo` it) so it keeps the same referenc
 
 `darkTheme` and `lightTheme` are exported if you want to read the defaults or extend them.
 
+### Styles
+`styles` restyles every built-in toast on that `<Toaster>`: radius, padding, fonts, progress bar,
+and per-type overrides. Colors still come from `themeOverrides`; set `backgroundColor` or `color`
+here only when a type should look different from the theme.
+```tsx
+<Toaster
+  styles={{
+    toast: { borderRadius: 8, paddingVertical: 10 },
+    title: { fontSize: 16, fontWeight: '700' },
+    progressTrack: { start: 12, end: 12, bottom: 0, height: 3, backgroundColor: '#E4E4E7' },
+    progress: { height: 3, borderRadius: 0, opacity: 1 },
+    success: {
+      toast: { backgroundColor: '#ECFDF5', borderColor: '#A7F3D0' },
+      title: { color: '#065F46' },
+    },
+    error: {
+      toast: { backgroundColor: '#FEF2F2', borderColor: '#FECACA' },
+      title: { color: '#991B1B' },
+      progress: { backgroundColor: '#DC2626' },
+    },
+  }}
+  icons={{
+    success: <CheckIcon />,
+    error: <ErrorIcon />,
+    info: <InfoIcon />,
+  }}
+/>
+```
+
+| Slot | Used for |
+| --- | --- |
+| `toast` | Card chrome (radius, padding, border, shadow) |
+| `title`, `description` | Text |
+| `action`, `actionText` | Action button |
+| `close` | Close button hit target |
+| `progressTrack` | Unfilled countdown rail (insets, height, track color) |
+| `progress` | Filled bar (height, radius, opacity, color). Width is animated |
+| `default`, `success`, `error`, `info`, `loading` | Same slots, for that type only |
+
+A toast's own `icon` option overrides `icons[type]`. Stack position, `zIndex`, and deck `elevation`
+cannot be overridden. They apply to built-in toasts only; custom toasts are not wrapped in the default card.
+
 ### Custom toasts
 The render function gets the active theme, so your component follows light and dark mode too:
 ```tsx
@@ -414,4 +457,17 @@ npm test
 npm run typecheck
 npm run build      # react-native-builder-bob -> lib/commonjs, lib/module, lib/typescript
 ```
-Run the demo with the Expo app in `example/`.
+**Publish a beta** (does not change `latest` on npm):
+
+```bash
+npm run build
+npm publish --tag beta
+```
+
+**Example app** uses the beta tag from npm (`"rn-toastie": "beta"`). After you publish:
+
+```bash
+cd example && npm install && npm start
+```
+
+For a stable release, bump the version and run `npm publish` (no tag) when ready.

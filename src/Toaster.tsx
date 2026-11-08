@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { I18nManager, Keyboard, Platform, StyleSheet, useColorScheme } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -9,7 +9,8 @@ import { darkTheme, lightTheme } from './theme';
 import type { ToastTheme, ToastThemeModeOverrides, ToastThemeOverrides } from './theme';
 import { ToastItem } from './ToastItem';
 import type {
-  HapticEvent, ToastAnimation, ToastOffset, ToastPeekSide, ToastPosition,
+  HapticEvent, ToastAnimation, ToastOffset, ToastPeekSide, ToastPosition, ToastStyles,
+  ToastType,
 } from './types';
 
 export interface ToasterProps {
@@ -39,6 +40,13 @@ export interface ToasterProps {
    * for each color scheme; a plain object applies to both.
    */
   themeOverrides?: ToastThemeOverrides | ToastThemeModeOverrides;
+  /**
+   * Global styles for built-in toasts. Shared slots apply to every type; `success`,
+   * `error`, `info`, `default`, and `loading` override only the parts they set.
+   */
+  styles?: ToastStyles;
+  /** Default icon per toast type. A toast's own `icon` option wins. */
+  icons?: Partial<Record<ToastType, ReactNode>>;
   /** Countdown bar at the bottom of auto-dismissing toasts */
   showProgress?: boolean;
   /** Plug in any haptics library, e.g. expo-haptics (see README) */
@@ -86,6 +94,8 @@ export function Toaster({
   keyboardOffset = 0,
   theme = 'system',
   themeOverrides,
+  styles,
+  icons,
   showProgress = true,
   haptics,
   maxVisible,
@@ -204,7 +214,7 @@ export function Toaster({
   if (toasts.length === 0) return null;
 
   return (
-    <Animated.View pointerEvents="box-none" style={[styles.container, containerStyle]}>
+    <Animated.View pointerEvents="box-none" style={[sheet.container, containerStyle]}>
       {toasts.map((t) => {
         const index = active.indexOf(t);
         const hidden = index >= shown;
@@ -229,6 +239,8 @@ export function Toaster({
             right={right}
             animation={anim}
             closeButton={t.closeButton ?? closeButton}
+            toastStyles={styles}
+            icons={icons}
             haptics={haptics}
             onMeasure={onMeasure}
             onPress={onPress}
@@ -239,6 +251,6 @@ export function Toaster({
   );
 }
 
-const styles = StyleSheet.create({
+const sheet = StyleSheet.create({
   container: { position: 'absolute', left: 0, right: 0, zIndex: 9999 },
 });

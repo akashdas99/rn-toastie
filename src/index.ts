@@ -8,4 +8,5 @@ export type {
   ToastOptions, ToastType, ToastPosition, ToastOffset, ToastPeekSide, ToastAction, ToastPatch,
   PromiseMessages, HapticEvent, ToastRender, ToastRenderContext, ToastContent,
   ToastAnimation, ToastAnimationPreset, ToastSpringConfig, SwipeDirection,
+  ToastPartStyles, ToastStyles,
 } from './types';
