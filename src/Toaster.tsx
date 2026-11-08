@@ -3,7 +3,7 @@ import { I18nManager, Keyboard, Platform, StyleSheet, useColorScheme } from 'rea
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { defaultAnimation, resolveAnimation } from './animation';
-import { anchorOffset, defaultPeekSide, resolveOffset, stackLayer, stackOffsets } from './layout';
+import { defaultPeekSide, resolveOffset, stackLayer, stackOffsets } from './layout';
 import { getSnapshot, setToasterAnimation, subscribe } from './store';
 import { darkTheme, lightTheme } from './theme';
 import type { ToastTheme, ToastThemeModeOverrides, ToastThemeOverrides } from './theme';
@@ -161,9 +161,21 @@ export function Toaster({
   const left = insets.left + edge.left;
   const right = insets.right + edge.right;
 
-  const containerStyle = useAnimatedStyle(() =>
-    anchorOffset(position, insets, kb.value, edge, keyboardOffset),
-  );
+  const insetTop = insets.top;
+  const insetBottom = insets.bottom;
+  const edgeTop = edge.top;
+  const edgeBottom = edge.bottom;
+
+  const containerStyle = useAnimatedStyle(() => {
+    'worklet';
+    if (position.startsWith('top')) {
+      return { top: insetTop + edgeTop };
+    }
+    const kh = kb.value;
+    return {
+      bottom: Math.max(kh, insetBottom) + edgeBottom + (kh > 0 ? keyboardOffset : 0),
+    };
+  });
 
   const active = useMemo(() => toasts.filter((t) => !t.dismissed), [toasts]);
 

@@ -27,7 +27,6 @@ export function anchorOffset(
   edge: { top: number; bottom: number },
   keyboardOffset = 0,
 ) {
-  'worklet';
   return position.startsWith('top')
     ? { top: insets.top + edge.top }
     : {
