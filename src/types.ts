@@ -1,4 +1,5 @@
 import type { ReactElement, ReactNode } from 'react';
+import type { TextStyle, ViewStyle } from 'react-native';
 import type { EasingFunction } from 'react-native-reanimated';
 import type { ToastTheme } from './theme';
 
@@ -47,6 +48,31 @@ export interface ToastAnimation {
 }
 
 export type ToastType = 'default' | 'success' | 'error' | 'info' | 'loading';
+
+export interface ToastPartStyles {
+  /** Card chrome: radius, padding, border width, shadow, background. */
+  toast?: ViewStyle;
+  title?: TextStyle;
+  description?: TextStyle;
+  /** Action button container. */
+  action?: ViewStyle;
+  actionText?: TextStyle;
+  /** Close button hit target (width, height, radius). */
+  close?: ViewStyle;
+  /** Unfilled rail: horizontal insets, bottom offset, height, background. */
+  progressTrack?: ViewStyle;
+  /** Filled countdown bar. Width is animated; do not set width here. */
+  progress?: ViewStyle;
+}
+
+export interface ToastStyles extends ToastPartStyles {
+  /** Merged on top of the shared slots for that toast type only. */
+  default?: ToastPartStyles;
+  success?: ToastPartStyles;
+  error?: ToastPartStyles;
+  info?: ToastPartStyles;
+  loading?: ToastPartStyles;
+}
 /**
  * 'top' and 'bottom' are full-width. The six corner/center positions use a
  * fixed-width toast (see Toaster's maxWidth) aligned left, center or right.
@@ -54,6 +80,17 @@ export type ToastType = 'default' | 'success' | 'error' | 'info' | 'loading';
 export type ToastPosition =
   | 'top' | 'top-left' | 'top-center' | 'top-right'
   | 'bottom' | 'bottom-left' | 'bottom-center' | 'bottom-right';
+
+/** Which way cards peek in a collapsed deck: lower or higher on the screen. */
+export type ToastPeekSide = 'top' | 'bottom';
+
+/**
+ * Distance (px) between the toasts and the screen edges, measured inside the
+ * safe area. A number applies to every side.
+ */
+export type ToastOffset =
+  | number
+  | { top?: number; bottom?: number; left?: number; right?: number };
 
 export interface ToastAction {
   label: string;
@@ -78,8 +115,6 @@ export interface ToastOptions {
   toasterId?: string;
   /** Screen-reader text. Recommended for custom toasts. */
   accessibilityLabel?: string;
-  /** Custom toasts only: drop the default card chrome (background, border, padding, shadow). */
-  unstyled?: boolean;
   /** Tap the toast to expand/collapse the deck. Default: true, but false for custom toasts. */
   expandOnTap?: boolean;
   /** Overrides the Toaster's animation for this toast. */
@@ -101,7 +136,6 @@ export interface ToastData {
   toasterId: string;
   render?: ToastRender;
   accessibilityLabel?: string;
-  unstyled?: boolean;
   expandOnTap?: boolean;
   animation?: ToastAnimation;
   closeButton?: boolean;

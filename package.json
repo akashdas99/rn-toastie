@@ -1,6 +1,6 @@
 {
   "name": "rn-toastie",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Swipeable, stackable toast notifications for React Native and Expo. Promise and custom toasts, 8 positions, themes, configurable animations, built on Reanimated.",
   "license": "MIT",
   "author": "Akash Das (https://github.com/akashdas99)",
@@ -36,7 +36,8 @@
   ],
   "sideEffects": false,
   "scripts": {
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p test/tsconfig.json",
+    "test": "jest",
     "build": "bob build",
     "clean": "node -e \"require('fs').rmSync('lib',{recursive:true,force:true})\"",
     "prepare": "bob build"
@@ -55,7 +56,9 @@
     }
   },
   "devDependencies": {
+    "@types/jest": "^30.0.0",
     "@types/react": "^19.3.0",
+    "jest": "^30.5.2",
     "react": "^19.3.1",
     "react-native": "^0.88.1",
     "react-native-builder-bob": "^0.44.1",
@@ -63,6 +66,7 @@
     "react-native-reanimated": "^4.7.1",
     "react-native-safe-area-context": "^5.11.1",
     "react-native-worklets": "^0.13.1",
+    "ts-jest": "^29.4.15",
     "typescript": "^5.9.3"
   },
   "react-native-builder-bob": {

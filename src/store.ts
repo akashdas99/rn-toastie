@@ -40,7 +40,6 @@ function show(content: ToastContent, opts: ToastOptions = {}, type?: ToastType) 
     title: custom ? '' : content,
     render: custom ? content : undefined,
     accessibilityLabel: opts.accessibilityLabel,
-    unstyled: opts.unstyled,
     expandOnTap: opts.expandOnTap,
     animation: opts.animation,
     closeButton: opts.closeButton,

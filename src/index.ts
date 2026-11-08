@@ -5,7 +5,8 @@ export { darkTheme, lightTheme } from './theme';
 export type { ToastTheme, ToastThemeModeOverrides, ToastThemeOverrides } from './theme';
 export { defaultAnimation } from './animation';
 export type {
-  ToastOptions, ToastType, ToastPosition, ToastAction, ToastPatch,
+  ToastOptions, ToastType, ToastPosition, ToastOffset, ToastPeekSide, ToastAction, ToastPatch,
   PromiseMessages, HapticEvent, ToastRender, ToastRenderContext, ToastContent,
   ToastAnimation, ToastAnimationPreset, ToastSpringConfig, SwipeDirection,
+  ToastPartStyles, ToastStyles,
 } from './types';

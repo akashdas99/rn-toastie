@@ -10,16 +10,53 @@
 [![GitHub stars](https://img.shields.io/github/stars/akashdas99/rn-toastie?style=social)](https://github.com/akashdas99/rn-toastie)
 [![Try it on Snack](https://img.shields.io/badge/Try%20it%20on-Snack-4630EB.svg?logo=expo&logoColor=white)](https://snack.expo.dev/@akashdas5/rn-toastie)
 
+<p align="center">
+  <img src="assets/social-preview.png" width="720" alt="rn-toastie — Toast notifications for React Native. Stack or list · Swipe · Promises · Themes · Custom UI" />
+</p>
+
 Swipeable, stackable toast notifications for React Native and Expo, built on Reanimated and
 Gesture Handler.
-
-**[Live demo on Expo Snack](https://snack.expo.dev/@akashdas5/rn-toastie)**: open it in the browser or scan the QR code with Expo Go.
 
 - Stacked deck that expands on tap, or a plain list like react-toastify
 - Swipe to dismiss, close button, action button
 - Success, error, info, loading and promise toasts, plus fully custom components
-- 8 positions, light/dark themes, configurable animations
+- 8 positions with custom edge offsets, light/dark themes, configurable animations
 - Accessible: screen-reader announcements, reduce-motion support, RTL
+
+If rn-toastie is useful to you, [star it on GitHub](https://github.com/akashdas99/rn-toastie). It helps other people find it.
+
+## Contents
+
+- [Install](#install)
+- [Setup](#setup)
+- [Usage](#usage)
+  - [Action button](#action-button)
+  - [Promise](#promise)
+  - [Loading + manual update](#loading--manual-update)
+- [Methods](#methods)
+- [Toaster props](#toaster-props)
+- [Toast options](#toast-options)
+- [Custom components](#custom-components)
+- [Positions](#positions)
+  - [Offset](#offset)
+- [Stack order](#stack-order)
+- [List mode](#list-mode-no-stacking)
+- [Close button](#close-button)
+- [RTL](#rtl)
+- [Lifecycle](#lifecycle)
+- [Named toasters](#named-toasters)
+- [Theming](#theming)
+  - [Different colors for light and dark](#different-colors-for-light-and-dark)
+  - [Styles](#styles)
+  - [Custom toasts](#custom-toasts)
+- [Animation](#animation)
+- [Progress bar](#progress-bar)
+- [Haptics](#haptics)
+- [Accessibility](#accessibility)
+- [Keyboard](#keyboard)
+- [Upgrading from 0.1](#upgrading-from-01)
+- [Changelog](CHANGELOG.md)
+- [Development](#development)
 
 ## Install
 
@@ -89,7 +126,7 @@ toast.update(id, { title: 'Uploaded', type: 'success', duration: 4000 });
 `update` accepts `title`, `description`, `type`, `duration`, `action`, `icon` and `render`,
 and restarts the countdown.
 
-## API
+## Methods
 
 | Method | Description |
 | --- | --- |
@@ -110,21 +147,26 @@ Each toast runs its own timer, so the oldest leaves first.
 | --- | --- | --- |
 | `id` | `'default'` | Name of this toaster. Target it with `toast('..', { toasterId })` |
 | `position` | `'top'` | One of the eight [positions](#positions) |
+| `offset` | `{ top: 8, bottom: 8, left: 16, right: 16 }` | Distance (px) from the screen edges, see [Offset](#offset) |
 | `maxWidth` | `380` | Max toast width (px) for the left, center and right positions |
 | `stacked` | `true` | Collapsed deck that expands on tap. `false` = [list mode](#list-mode-no-stacking) |
 | `maxVisible` | `3` stacked, unlimited in list mode | How many toasts show at once |
-| `newestOnTop` | `false` | Put the newest toast above the older ones (see [Stack order](#stack-order)) |
+| `newestOnTop` | `true` | Put the newest toast above the older ones (see [Stack order](#stack-order)) |
 | `peek` | `12` | Vertical peek (px) of each card behind the front one |
+| `peekSide` | top: `bottom`, bottom: `top` | Collapsed deck only: peek lower (`bottom`) or higher (`top`) on the screen |
 | `peekScale` | `0.05` | Scale reduction per level in the collapsed deck |
 | `gap` | `8` | Gap (px) between toasts when expanded or in list mode |
 | `closeButton` | `true` | Close (x) button on built-in toasts |
 | `showProgress` | `true` | Countdown bar on auto-dismissing toasts |
 | `theme` | `'system'` | `'light'`, `'dark'` or `'system'` |
 | `themeOverrides` | | Override any [theme](#theming) value, or `{ light, dark }` for each scheme |
+| `styles` | | Global layout and typography for built-in toasts (see [Styles](#styles)) |
+| `icons` | | Default icon per type; a toast's own `icon` wins (see [Styles](#styles)) |
 | `animation` | | Enter, exit, restack and swipe motion (see [Animation](#animation)) |
 | `haptics` | | `(event) => void`, see [Haptics](#haptics) |
 | `rtl` | `I18nManager.isRTL` | Mirror the layout and progress bar |
 | `avoidKeyboard` | `true` on iOS, `false` on Android | Lift a bottom toaster above the keyboard |
+| `keyboardOffset` | `0` | Extra gap (px) above the keyboard when `avoidKeyboard` is on |
 
 ## Toast options
 
@@ -140,7 +182,6 @@ Each toast runs its own timer, so the oldest leaves first.
 | `onDismiss` | | Called once after the toast leaves the screen, for any reason |
 | `toasterId` | `'default'` | Which `<Toaster id>` shows it |
 | `animation` | Toaster's `animation` | Per-toast override (see [Animation](#animation)) |
-| `unstyled` | `false` | Custom toasts: remove the card background, border, padding and shadow |
 | `expandOnTap` | `true`, `false` for custom | Tap toggles the deck |
 | `accessibilityLabel` | title and description | Screen-reader text. Recommended for custom toasts |
 | `id` | auto | Reuse an id to replace an existing toast |
@@ -160,19 +201,18 @@ toast.custom(({ id, dismiss, update, theme }) => (
   />
 ), { duration: Infinity, accessibilityLabel: 'Uploading file' });
 
-// Full control over the look: no background, border, padding or shadow
-toast.custom(<PromoCard />, { unstyled: true });
+toast.custom(<PromoCard />, { duration: 6000 });
 ```
 
-- Your component renders inside the stack, so swipe-to-dismiss, stacking, expanding, auto-dismiss and
-  haptics still work. The height is measured, so any size is fine.
+- Custom toasts render only your component (no default card, progress bar or close button). Swipe-to-dismiss,
+  stacking, expanding, auto-dismiss and haptics still work. The height is measured, so any size is fine.
 - A function render is called inside a component, so hooks are allowed in it.
 - `ctx` gives you `id`, `type`, `theme`, `dismiss()` and `update(patch)`. `update({ render })` swaps the content.
 - Tapping a custom toast does **not** expand the deck by default, so buttons inside it never double-fire.
   Set `expandOnTap: true` if your content has no buttons.
 - Set `accessibilityLabel`. Without it a screen reader reads the text inside your component, but iOS
   won't announce the toast when it appears.
-- `unstyled` also hides the progress bar. Pass `duration: Infinity` to keep the toast until dismissed.
+- There is no library progress bar on custom toasts. Pass `duration: Infinity` to keep the toast until dismissed.
 
 ## Positions
 Eight positions: `top`, `bottom` (full width) and `top-left`, `top-center`, `top-right`,
@@ -183,13 +223,31 @@ Eight positions: `top`, `bottom` (full width) and `top-left`, `top-center`, `top
 Left and right are physical edges, also in RTL. On a phone the aligned positions look almost like
 the full-width ones, so they matter mostly on tablets and foldables.
 
-## Stack order
-By default a new toast goes below the older ones (on a bottom toaster it stays on the bottom edge
-and pushes older ones up). Set `newestOnTop` to put the newest above them instead.
+### Offset
+Move the stack away from the screen edges, for example below a custom header or above a tab bar.
+Offsets are measured inside the safe area, so you don't need to add the notch or home indicator.
 ```tsx
-<Toaster position="top" newestOnTop />
+<Toaster position="top" offset={{ top: 64 }} />            // below a 64px header
+<Toaster position="bottom" offset={{ bottom: 72 }} />      // above a tab bar
+<Toaster position="bottom-right" offset={24} />            // 24px from every edge
 ```
-The newest toast is always the front card of the collapsed deck.
+A number sets all four sides. In an object, sides you leave out keep their defaults
+(`top` and `bottom` 8, `left` and `right` 16). On a bottom toaster the keyboard lift still
+applies, and the offset is added above the keyboard.
+
+## Stack order
+`newestOnTop` (default `true`) puts the newest toast above the older ones. On a top toaster the
+newest stays on the screen edge. On a bottom toaster the older toasts stay on the bottom edge and
+the newest sits above them. Set it to `false` to reverse that.
+```tsx
+<Toaster position="top" newestOnTop={false} />
+```
+The front card of the collapsed deck is always the toast at that edge, same as the list.
+
+`peekSide` only changes which way the deck peeks behind that front card. It does not change order.
+```tsx
+<Toaster position="top" peekSide="top" />   {/* cards peek upward behind the front toast */}
+```
 
 ## List mode (no stacking)
 Show toasts one below the other at full size, like react-toastify:
@@ -270,6 +328,48 @@ Define the object outside render (or `useMemo` it) so it keeps the same referenc
 
 `darkTheme` and `lightTheme` are exported if you want to read the defaults or extend them.
 
+### Styles
+`styles` restyles every built-in toast on that `<Toaster>`: radius, padding, fonts, progress bar,
+and per-type overrides. Colors still come from `themeOverrides`; set `backgroundColor` or `color`
+here only when a type should look different from the theme.
+```tsx
+<Toaster
+  styles={{
+    toast: { borderRadius: 8, paddingVertical: 10 },
+    title: { fontSize: 16, fontWeight: '700' },
+    progressTrack: { start: 12, end: 12, bottom: 0, height: 3, backgroundColor: '#E4E4E7' },
+    progress: { height: 3, borderRadius: 0, opacity: 1 },
+    success: {
+      toast: { backgroundColor: '#ECFDF5', borderColor: '#A7F3D0' },
+      title: { color: '#065F46' },
+    },
+    error: {
+      toast: { backgroundColor: '#FEF2F2', borderColor: '#FECACA' },
+      title: { color: '#991B1B' },
+      progress: { backgroundColor: '#DC2626' },
+    },
+  }}
+  icons={{
+    success: <CheckIcon />,
+    error: <ErrorIcon />,
+    info: <InfoIcon />,
+  }}
+/>
+```
+
+| Slot | Used for |
+| --- | --- |
+| `toast` | Card chrome (radius, padding, border, shadow) |
+| `title`, `description` | Text |
+| `action`, `actionText` | Action button |
+| `close` | Close button hit target |
+| `progressTrack` | Unfilled countdown rail (insets, height, track color) |
+| `progress` | Filled bar (height, radius, opacity, color). Width is animated |
+| `default`, `success`, `error`, `info`, `loading` | Same slots, for that type only |
+
+A toast's own `icon` option overrides `icons[type]`. Stack position, `zIndex`, and deck `elevation`
+cannot be overridden. They apply to built-in toasts only; custom toasts are not wrapped in the default card.
+
 ### Custom toasts
 The render function gets the active theme, so your component follows light and dark mode too:
 ```tsx
@@ -339,18 +439,52 @@ import * as Haptics from 'expo-haptics';
 - Each toast is an `alert` with a live region (`assertive` for errors, `polite` otherwise);
   iOS gets an explicit VoiceOver announcement.
 - Custom screen-reader actions: **Dismiss**, plus the action button's label when present.
-- Toasts hidden behind the front one are removed from the accessibility tree until the deck is expanded.
+- Toasts hidden behind the front one are removed from the accessibility tree until the deck is expanded. On Android, the newest toast is still announced in that state when it has an `accessibilityLabel`, title, or description. With none of those, nothing is announced.
 - Honors the OS "reduce motion" setting (springs become short fades).
 
 ## Keyboard
 `<Toaster position="bottom" avoidKeyboard />` lifts the stack above the keyboard.
 Default is on for iOS and off for Android, where `adjustResize` already moves the window.
 Set it explicitly if your Android setup differs (for example edge-to-edge).
+Add space between the toast and the keyboard with `keyboardOffset` (it does not apply when
+the keyboard is hidden; use `offset.bottom` for a permanent bottom inset).
+```tsx
+<Toaster position="bottom" avoidKeyboard keyboardOffset={12} />
+```
+
+## Upgrading from 0.1
+- **`unstyled` is removed.** Custom toasts are never wrapped in the default card now, so drop the
+  option. If you relied on the card, add the background, border, padding and shadow in your own
+  component (`ctx.theme` has the colors).
 
 ## Development
 ```bash
 npm install
+npm test
 npm run typecheck
 npm run build      # react-native-builder-bob -> lib/commonjs, lib/module, lib/typescript
 ```
-Run the demo with the Expo app in `example/`.
+**Stable release.** Set `version` in `package.json` (for 0.2.0 it is `0.2.0`), point `example/package.json` at `"rn-toastie": "^0.2.0"`, then:
+
+```bash
+npm test
+npm run typecheck
+npm publish --dry-run
+npm publish
+```
+
+`npm publish` with no tag updates `latest`. [CHANGELOG.md](CHANGELOG.md) keeps every version. The GitHub release title is the version, so the notes are the `0.2.0` section without its `## 0.2.0` heading:
+
+```bash
+git tag v0.2.0
+git push origin HEAD --tags
+awk 'BEGIN{p=0} /^## 0.2.0/{p=1; next} /^## /{p=0} p' CHANGELOG.md > release-notes.md
+gh release create v0.2.0 --title "0.2.0" --notes-file release-notes.md
+```
+
+**Publish a beta** (does not change `latest` on npm). Set `version` in `package.json` to a distinct prerelease, such as `0.2.0-beta.0`, then:
+
+```bash
+npm run build
+npm publish --tag beta
+```
