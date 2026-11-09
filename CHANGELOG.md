@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.1 - 2026-11-09
+
+### Docs
+
+- README demo GIFs for promises, custom toasts, stack order and keyboard handling, plus a live demo link on Expo Snack.
+
 ## 0.2.0 - 2026-11-09
 
 ### Added
