@@ -2,7 +2,6 @@
 
 [![npm version](https://img.shields.io/npm/v/rn-toastie.svg)](https://www.npmjs.com/package/rn-toastie)
 [![npm downloads](https://img.shields.io/npm/dm/rn-toastie.svg)](https://www.npmjs.com/package/rn-toastie)
-[![bundle size](https://img.shields.io/bundlephobia/minzip/rn-toastie)](https://bundlephobia.com/package/rn-toastie)
 [![license](https://img.shields.io/npm/l/rn-toastie.svg)](https://github.com/akashdas99/rn-toastie/blob/main/LICENSE)
 [![TypeScript](https://img.shields.io/badge/types-TypeScript-blue.svg)](https://www.typescriptlang.org/)
 [![platforms](https://img.shields.io/badge/platforms-iOS%20%7C%20Android-lightgrey.svg)](https://reactnative.dev/)
@@ -16,6 +15,8 @@
 
 Swipeable, stackable toast notifications for React Native and Expo, built on Reanimated and
 Gesture Handler.
+
+**[Live demo on Expo Snack](https://snack.expo.dev/@akashdas5/rn-toastie)**: open it in the browser or scan the QR code with Expo Go.
 
 - Stacked deck that expands on tap, or a plain list like react-toastify
 - Swipe to dismiss, close button, action button
@@ -126,6 +127,10 @@ toast.update(id, { title: 'Uploaded', type: 'success', duration: 4000 });
 `update` accepts `title`, `description`, `type`, `duration`, `action`, `icon` and `render`,
 and restarts the countdown.
 
+<p align="center">
+  <img src="assets/promise-undo.jpg" width="280" alt="Success toast reading Uploaded, with a close button." />
+</p>
+
 ## Methods
 
 | Method | Description |
@@ -214,6 +219,10 @@ toast.custom(<PromoCard />, { duration: 6000 });
   won't announce the toast when it appears.
 - There is no library progress bar on custom toasts. Pass `duration: Infinity` to keep the toast until dismissed.
 
+<p align="center">
+  <img src="assets/custom.jpg" width="280" alt="Custom toast asking if the example was helpful, with Yes and No." />
+</p>
+
 ## Positions
 Eight positions: `top`, `bottom` (full width) and `top-left`, `top-center`, `top-right`,
 `bottom-left`, `bottom-center`, `bottom-right` (fixed width, set with `maxWidth`, default 380).
@@ -248,6 +257,10 @@ The front card of the collapsed deck is always the toast at that edge, same as t
 ```tsx
 <Toaster position="top" peekSide="top" />   {/* cards peek upward behind the front toast */}
 ```
+
+<p align="center">
+  <img src="assets/stack-list.jpg" width="280" alt="Collapsed deck with newest on top and peek side set to top." />
+</p>
 
 ## List mode (no stacking)
 Show toasts one below the other at full size, like react-toastify:
@@ -396,6 +409,10 @@ toast.error('Card declined', { animation: { preset: 'fade', exitDuration: 150 } 
 | `scale` | Fades and grows from `enterScale` |
 | `none` | Appears and disappears instantly |
 
+<p align="center">
+  <img src="assets/hero.jpg" width="280" alt="Animation presets: slide, fade, scale, and none." />
+</p>
+
 | Option | Default | Description |
 | --- | --- | --- |
 | `preset` | `'slide'` | Enter/exit motion, see the table above |
@@ -452,6 +469,10 @@ the keyboard is hidden; use `offset.bottom` for a permanent bottom inset).
 <Toaster position="bottom" avoidKeyboard keyboardOffset={12} />
 ```
 
+<p align="center">
+  <img src="assets/keyboard.gif" width="280" alt="Bottom toast lifting above the keyboard while the footer field stays in place." />
+</p>
+
 ## Upgrading from 0.1
 - **`unstyled` is removed.** Custom toasts are never wrapped in the default card now, so drop the
   option. If you relied on the card, add the background, border, padding and shadow in your own
@@ -463,28 +484,4 @@ npm install
 npm test
 npm run typecheck
 npm run build      # react-native-builder-bob -> lib/commonjs, lib/module, lib/typescript
-```
-**Stable release.** Set `version` in `package.json` (for 0.2.0 it is `0.2.0`), point `example/package.json` at `"rn-toastie": "^0.2.0"`, then:
-
-```bash
-npm test
-npm run typecheck
-npm publish --dry-run
-npm publish
-```
-
-`npm publish` with no tag updates `latest`. [CHANGELOG.md](CHANGELOG.md) keeps every version. The GitHub release title is the version, so the notes are the `0.2.0` section without its `## 0.2.0` heading:
-
-```bash
-git tag v0.2.0
-git push origin HEAD --tags
-awk 'BEGIN{p=0} /^## 0.2.0/{p=1; next} /^## /{p=0} p' CHANGELOG.md > release-notes.md
-gh release create v0.2.0 --title "0.2.0" --notes-file release-notes.md
-```
-
-**Publish a beta** (does not change `latest` on npm). Set `version` in `package.json` to a distinct prerelease, such as `0.2.0-beta.0`, then:
-
-```bash
-npm run build
-npm publish --tag beta
 ```
