@@ -13,6 +13,10 @@
   <img src="assets/social-preview.png" width="720" alt="rn-toastie — Toast notifications for React Native. Stack or list · Swipe · Promises · Themes · Custom UI" />
 </p>
 
+<p align="center">
+  <img src="assets/hero.gif" width="300" alt="rn-toastie demo app showing toasts animating in, stacking and dismissing." />
+</p>
+
 Swipeable, stackable toast notifications for React Native and Expo, built on Reanimated and
 Gesture Handler.
 
@@ -123,6 +127,10 @@ Also accepts a function (`() => api.pay(order)`). Returns the original promise.
 
 ### Loading + manual update
 
+<p align="center">
+  <img src="assets/promise-undo.gif" width="280" alt="Success toast reading Uploaded, with a close button." />
+</p>
+
 ```ts
 const id = toast.loading("Uploading...");
 toast.update(id, { title: "Uploaded", type: "success", duration: 4000 });
@@ -130,10 +138,6 @@ toast.update(id, { title: "Uploaded", type: "success", duration: 4000 });
 
 `update` accepts `title`, `description`, `type`, `duration`, `action`, `icon` and `render`,
 and restarts the countdown.
-
-<p align="center">
-  <img src="assets/promise-undo.jpg" width="280" alt="Success toast reading Uploaded, with a close button." />
-</p>
 
 ## Methods
 
@@ -197,6 +201,10 @@ Each toast runs its own timer, so the oldest leaves first.
 
 ## Custom components
 
+<p align="center">
+  <img src="assets/custom.gif" width="280" alt="Custom toast asking if the example was helpful, with Yes and No." />
+</p>
+
 Pass any React element, or a function that returns one, instead of a string:
 
 ```tsx
@@ -227,10 +235,6 @@ toast.custom(<PromoCard />, { duration: 6000 });
   won't announce the toast when it appears.
 - There is no library progress bar on custom toasts. Pass `duration: Infinity` to keep the toast until dismissed.
 
-<p align="center">
-  <img src="assets/custom.jpg" width="280" alt="Custom toast asking if the example was helpful, with Yes and No." />
-</p>
-
 ## Positions
 
 Eight positions: `top`, `bottom` (full width) and `top-left`, `top-center`, `top-right`,
@@ -260,6 +264,10 @@ applies, and the offset is added above the keyboard.
 
 ## Stack order
 
+<p align="center">
+  <img src="assets/stack-list.gif" width="280" alt="Collapsed deck with newest on top and peek side set to top." />
+</p>
+
 `newestOnTop` (default `true`) puts the newest toast above the older ones. On a top toaster the
 newest stays on the screen edge. On a bottom toaster the older toasts stay on the bottom edge and
 the newest sits above them. Set it to `false` to reverse that.
@@ -275,10 +283,6 @@ The front card of the collapsed deck is always the toast at that edge, same as t
 ```tsx
 <Toaster position="top" peekSide="top" />   {/* cards peek upward behind the front toast */}
 ```
-
-<p align="center">
-  <img src="assets/stack-list.jpg" width="280" alt="Collapsed deck with newest on top and peek side set to top." />
-</p>
 
 ## List mode (no stacking)
 
@@ -462,10 +466,6 @@ toast.error("Card declined", {
 | `scale`           | Fades and grows from `enterScale` |
 | `none`            | Appears and disappears instantly  |
 
-<p align="center">
-  <img src="assets/hero.jpg" width="280" alt="Animation presets: slide, fade, scale, and none." />
-</p>
-
 | Option             | Default                                      | Description                                            |
 | ------------------ | -------------------------------------------- | ------------------------------------------------------ |
 | `preset`           | `'slide'`                                    | Enter/exit motion, see the table above                 |
@@ -520,6 +520,10 @@ import * as Haptics from "expo-haptics";
 
 ## Keyboard
 
+<p align="center">
+  <img src="assets/keyboard.gif" width="280" alt="Bottom toast lifting above the keyboard while the footer field stays in place." />
+</p>
+
 `<Toaster position="bottom" avoidKeyboard />` lifts the stack above the keyboard.
 Default is on for iOS and off for Android, where `adjustResize` already moves the window.
 Set it explicitly if your Android setup differs (for example edge-to-edge).
@@ -529,16 +533,6 @@ the keyboard is hidden; use `offset.bottom` for a permanent bottom inset).
 ```tsx
 <Toaster position="bottom" avoidKeyboard keyboardOffset={12} />
 ```
-
-<<<<<<< HEAD
-
-<p align="center">
-  <img src="assets/keyboard.gif" width="280" alt="Bottom toast lifting above the keyboard while the footer field stays in place." />
-</p>
-
-=======
-
-> > > > > > > 9056a264c7ad793c862727fe18fc1cfa68c369e3
 
 ## Upgrading from 0.1
 
@@ -554,8 +548,6 @@ npm test
 npm run typecheck
 npm run build      # react-native-builder-bob -> lib/commonjs, lib/module, lib/typescript
 ```
-
-# <<<<<<< HEAD
 
 **Stable release.** Set `version` in `package.json` (for 0.2.0 it is `0.2.0`), point `example/package.json` at `"rn-toastie": "^0.2.0"`, then:
 
@@ -581,5 +573,3 @@ gh release create v0.2.0 --title "0.2.0" --notes-file release-notes.md
 npm run build
 npm publish --tag beta
 ```
-
-> > > > > > > 9056a264c7ad793c862727fe18fc1cfa68c369e3
