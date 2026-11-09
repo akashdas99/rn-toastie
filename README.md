@@ -10,11 +10,11 @@
 [![Try it on Snack](https://img.shields.io/badge/Try%20it%20on-Snack-4630EB.svg?logo=expo&logoColor=white)](https://snack.expo.dev/@akashdas5/rn-toastie)
 
 <p align="center">
-  <img src="assets/social-preview.png" width="720" alt="rn-toastie — Toast notifications for React Native. Stack or list · Swipe · Promises · Themes · Custom UI" />
+  <img src="https://raw.githubusercontent.com/akashdas99/rn-toastie/main/assets/social-preview.png" width="720" alt="rn-toastie — Toast notifications for React Native. Stack or list · Swipe · Promises · Themes · Custom UI" />
 </p>
 
 <p align="center">
-  <img src="assets/hero.gif" width="300" alt="rn-toastie demo app showing toasts animating in, stacking and dismissing." />
+  <img src="https://raw.githubusercontent.com/akashdas99/rn-toastie/main/assets/hero.gif" width="300" alt="rn-toastie demo app showing toasts animating in, stacking and dismissing." />
 </p>
 
 **[Live demo on Expo Snack](https://snack.expo.dev/@akashdas5/rn-toastie)**: open it in the browser or scan the QR code with Expo Go.
@@ -130,7 +130,7 @@ Also accepts a function (`() => api.pay(order)`). Returns the original promise.
 ### Loading + manual update
 
 <p align="center">
-  <img src="assets/promise-undo.gif" width="280" alt="Success toast reading Uploaded, with a close button." />
+  <img src="https://raw.githubusercontent.com/akashdas99/rn-toastie/main/assets/promise-undo.gif" width="280" alt="Success toast reading Uploaded, with a close button." />
 </p>
 
 ```ts
@@ -204,7 +204,7 @@ Each toast runs its own timer, so the oldest leaves first.
 ## Custom components
 
 <p align="center">
-  <img src="assets/custom.gif" width="280" alt="Custom toast asking if the example was helpful, with Yes and No." />
+  <img src="https://raw.githubusercontent.com/akashdas99/rn-toastie/main/assets/custom.gif" width="280" alt="Custom toast asking if the example was helpful, with Yes and No." />
 </p>
 
 Pass any React element, or a function that returns one, instead of a string:
@@ -267,7 +267,7 @@ applies, and the offset is added above the keyboard.
 ## Stack order
 
 <p align="center">
-  <img src="assets/stack-list.gif" width="280" alt="Collapsed deck with newest on top and peek side set to top." />
+  <img src="https://raw.githubusercontent.com/akashdas99/rn-toastie/main/assets/stack-list.gif" width="280" alt="Collapsed deck with newest on top and peek side set to top." />
 </p>
 
 `newestOnTop` (default `true`) puts the newest toast above the older ones. On a top toaster the
@@ -524,7 +524,7 @@ import * as Haptics from "expo-haptics";
 ## Keyboard
 
 <p align="center">
-  <img src="assets/keyboard.gif" width="280" alt="Bottom toast lifting above the keyboard while the footer field stays in place." />
+  <img src="https://raw.githubusercontent.com/akashdas99/rn-toastie/main/assets/keyboard.gif" width="280" alt="Bottom toast lifting above the keyboard while the footer field stays in place." />
 </p>
 
 `<Toaster position="bottom" avoidKeyboard />` lifts the stack above the keyboard.
