@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.2 - 2026-11-12
+
+### Fixed
+
+- Installing the package no longer crashes Metro with "Cannot access 'anchorOffset' before initialization". The worklets plugin rewrites `'worklet'` functions into `const` bindings, which the compiled `exports.anchorOffset = anchorOffset` line then reads before it is set. `anchorOffset` is now an arrow function, so that export stays below the binding.
+
 ## 0.2.1 - 2026-11-09
 
 ### Docs
