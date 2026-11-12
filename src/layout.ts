@@ -20,13 +20,13 @@ export function resolveOffset(offset?: ToastOffset) {
  * area. A bottom toaster uses whichever is larger of the keyboard and the
  * bottom inset, then adds the offset.
  */
-export function anchorOffset(
+export const anchorOffset = (
   position: ToastPosition,
   insets: { top: number; bottom: number },
   keyboard: number,
   edge: { top: number; bottom: number },
   keyboardOffset = 0,
-) {
+) => {
   'worklet';
   return position.startsWith('top')
     ? { top: insets.top + edge.top }
@@ -34,7 +34,7 @@ export function anchorOffset(
         bottom:
           Math.max(keyboard, insets.bottom) + edge.bottom + (keyboard > 0 ? keyboardOffset : 0),
       };
-}
+};
 
 interface StackItem {
   id: string;
